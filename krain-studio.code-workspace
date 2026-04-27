@@ -16,6 +16,9 @@
       "sideBar.background": "#111820",
       "tab.activeBorderTop": "#0088ff",
       "focusBorder": "#0088ff"
+    },
+    "files.exclude": {
+      ".claude/settings.local.json": true
     }
   }
 }

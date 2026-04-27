@@ -1,4 +1,4 @@
-# KRAIN STUDIO — Project Guide
+# krain.studio — Build Brief
 
 <!-- WORKSPACE_STANDARD_V1 -->
 ## Workspace Instruction Contract
@@ -8,86 +8,111 @@
 
 ---
 
-## Project Overview
+You are building **krain.studio**, a premium portfolio website for an architectural
+practice that produces RIBA Stage 4–5 packages — construction-stage drawings,
+details, and specs.
 
-**KRAIN STUDIO** — Premium brochure website for an architectural practice.
+## Read first
 
-| Item | Value |
-|------|-------|
-| Type | One-page brochure website |
-| Brand | KRAIN STUDIO |
-| Industry | Residential architecture / planning drawings |
-| Repo | github.com/Kepners/krain-studio |
-| Hosting | Vercel (auto-deploy on push) |
-| Domain | TBD |
+1. [docs/SPEC.md](docs/SPEC.md) — full design specification, tokens, motion specs,
+   screen breakdown (this is the handoff README, copied in verbatim).
+2. [docs/source/krain/dir-brutalist.jsx](docs/source/krain/dir-brutalist.jsx) — the
+   **chosen** design direction (codename: Signal). This is the source of truth for
+   layout and motion. Recreate it as a real Next.js codebase; do not ship it as-is.
+3. [docs/source/krain/placeholders.jsx](docs/source/krain/placeholders.jsx) — image
+   placeholder components to keep until real photos arrive.
 
-**Full brief:** [docs/SPEC.md](docs/SPEC.md) — read this before building anything.
+`dir-editorial.jsx` and `dir-quiet.jsx` are rejected explorations, included for
+context only — do not implement them.
 
 ---
 
 ## Tech Stack
 
-| Component | Technology |
-|-----------|------------|
-| Framework | Next.js 16 (App Router) + TypeScript |
-| Styling | Tailwind CSS v4 |
-| Animation | Framer Motion v12 |
-| Icons | Lucide React (only if needed) |
-| Hosting | Vercel |
+| Component  | Technology                              |
+|------------|-----------------------------------------|
+| Framework  | Next.js 16 (App Router) + TypeScript    |
+| Styling    | Tailwind CSS v4                         |
+| Motion     | Framer Motion v12                       |
+| Fonts      | Geist + Geist Mono (via `next/font`)    |
+| Hosting    | Vercel (auto-deploy on `git push`)      |
+| Domain     | `krain.studio` (TBD)                    |
+| Repo       | `github.com/Kepners/krain-studio`       |
+
+---
+
+## Critical things not to lose in translation
+
+- **The coral slash in the hero is the brand**, not decoration. Keep the parallax
+  behaviour, the radial glow behind it, and the flicker on the `1:5` numerals.
+- **Geist 200 (ultralight)** at 128px+ for headlines. Do not substitute heavier
+  weights "to look more legible" — the thinness mirrors the logo's stroke.
+- **Magnetic CTA + tilt plates + cursor-driven motion** are the texture that
+  makes the site feel premium. Use Framer Motion `useMotionValue` / spring
+  transitions for an inertial feel — not CSS transitions.
+- Respect `prefers-reduced-motion: reduce` — disable parallax, tilt, magnetic;
+  keep fade-ins.
+- The **stats bar counter** uses a 2s ease-out tween from 0 to value, triggered
+  when the bar enters the viewport (Framer Motion `useInView`).
 
 ---
 
 ## Design System
 
-### Palette (Dark Graphite + Neon Electric Blue)
+The handoff README mentions a "dark Signal" default and a "cream variant", but the
+chosen JSX (`dir-brutalist.jsx`) uses **cream as the page background** with deep
+navy text and one dark manifesto section. We follow the JSX — it's the explicit
+source of truth. The README's dark-default note is treated as out-of-date.
+
+### Palette
 ```
-Background:  #141414  (warm near-black)
-Surface:     #1a1a1a  (secondary)
-Card:        #1e1e1e
-Text:        #e8e4dc  (warm ivory — primary)
-Secondary:   #9a9590  (warm stone)
-Muted:       #5a5752  (dark grey)
-Accent:      Electric blue — TBD precise hex, restrained use only
-Border:      rgba(232, 228, 220, 0.08)
+Page background:  #ece7dd  (warm cream/bone — primary)
+Ink (text):       #1a1d33  (deep navy)
+Ink soft:         rgba(26,29,51,0.62)  (muted text)
+Accent:           #ff4d6e  (coral — the brand "light")
+Accent soft:      rgba(255,77,110,0.18)
+Rule:             rgba(26,29,51,0.16)  (hairlines)
+Plate:            #dfd9ca  (drawing plate, slightly darker than page)
+Manifesto bg:     #1a1d33  (the one dark section, text in cream)
 ```
 
 ### Typography
-- **Headings:** Cormorant Garamond (serif, 300–400 weight)
-- **Body:** Inter (300–400 weight)
-- Mix: large serif headlines + small tracked sans labels
+- **Sans:** Geist (weights 200, 300, 400, 500, 600, 700)
+- **Mono:** Geist Mono (400, 500)
+- Headlines: Geist 200, tight tracking (`-0.045em`)
+- Eyebrows / metadata: Geist Mono 11px, 0.22em letter-spacing, uppercase
 
-### Key Design Rules
-- Large margins, generous spacing
-- Thin lines and architectural framing details
-- No visual clutter
-- Motion: soft, quiet, confident — never bouncy or flashy
-- See [docs/SPEC.md](docs/SPEC.md) for full animation direction
+See [docs/SPEC.md](docs/SPEC.md) for the full type scale and motion timing tables.
 
 ---
 
 ## Key Files
 
-| File | Purpose |
-|------|---------|
-| [docs/SPEC.md](docs/SPEC.md) | **READ THIS FIRST** — full creative brief |
-| `app/layout.tsx` | Root layout, fonts, metadata |
-| `app/globals.css` | Design tokens, Tailwind v4 theme |
-| `app/page.tsx` | Page composition (all sections) |
-| `components/` | Individual section components |
+| File                                | Purpose                                    |
+|-------------------------------------|--------------------------------------------|
+| [docs/SPEC.md](docs/SPEC.md)        | **Read first** — full design spec          |
+| [app/layout.tsx](app/layout.tsx)    | Root layout, fonts, metadata               |
+| [app/globals.css](app/globals.css)  | Tailwind v4 theme + design tokens          |
+| [app/page.tsx](app/page.tsx)        | Home page composition                      |
+| [components/home/](components/home) | Section components                         |
+| [components/ui/](components/ui)     | Shared primitives (Magnetic, Tilt, …)      |
+| [lib/tokens.ts](lib/tokens.ts)      | Palette and type-scale exports             |
+| [public/krain/](public/krain)       | Logo assets                                |
 
 ---
 
-## Site Structure
+## Site Structure (top to bottom)
 
-1. Nav (sticky, scroll-aware)
-2. Hero (cinematic load animation — most important)
-3. Studio Introduction
-4. Services (5 services)
-5. Process (5 steps)
-6. Featured Projects (3 placeholder cards)
-7. Why Choose the Practice (3–4 reasons)
-8. Contact / Enquiry
-9. Footer
+1. Top status ticker (48px, hairline border)
+2. Sticky nav (logo + 6 links + magnetic "Start a brief" CTA)
+3. Hero — coral slash, two-col grid, ultralight H1
+4. Stats bar (4 columns with counter animation)
+5. Selected work (5 project cards, first is featured/spans 2 rows)
+6. Manifesto (dark section, "junctions" word reveal)
+7. Services (6 cards, A–F)
+8. Journal (3 cards)
+9. CTA "Got a set of plans?" with mailto + magnetic buttons
+10. Footer (© Krain Studio · MMXXVI · Sheffield / London)
 
 ---
 
@@ -95,12 +120,25 @@ Border:      rgba(232, 228, 220, 0.08)
 
 - **Read [docs/SPEC.md](docs/SPEC.md) before starting any section**
 - Hero is the highest priority — nail the first impression
-- Motion must be tasteful and restrained — see spec for direction
+- Motion must be tasteful and inertial — Framer Motion springs, not CSS
 - All copy in refined British-English
-- No lorem ipsum — use realistic architectural placeholder content
-- Site must look excellent without real photography
-- Mobile-first responsive
+- No lorem ipsum — use the realistic project copy from the spec
+- Site must look excellent without real photography (placeholders are by-design)
+- Mobile-first responsive — stack hero columns at < 900px, reduce H1 to 64px,
+  kill cursor-driven motion on touch
 - `prefers-reduced-motion` support required
+
+---
+
+## Open items (from handoff, decisions made)
+
+| Item                            | Decision                                              |
+|---------------------------------|-------------------------------------------------------|
+| Framework                       | Next.js 16 App Router + TypeScript (already in repo)  |
+| CMS                             | Hard-coded for v1; revisit Sanity/Contentlayer later  |
+| Contact email                   | `matt@krain.studio` (handoff said `matt@krainstudio` — assumed missing TLD; confirm with client) |
+| Real photography                | TBD — placeholders shipped; designed to swap in cleanly |
+| Other pages (Work, Process, …)  | Home v1 ships first; remaining pages scoped, not built |
 
 ---
 
@@ -114,25 +152,29 @@ git push         # auto-deploys to Vercel
 
 ---
 
-## Git Workflow
+## Git & Deploy Workflow
 
-Commit and push after every meaningful change.
+**Branch:** `main` (single branch — dev and deploy are the same)
 
 ```bash
-git add -A && git commit -m "emoji: description" && git push
+git add <files>
+git commit -m "🤖 feat/fix: description"
+git push origin main
 ```
 
----
-
-## Current Status
-
-- [x] GitHub repo created
-- [x] Next.js 16 bootstrapped (TypeScript, Tailwind v4, Framer Motion)
-- [x] SPEC.md written with full creative brief
-- [ ] Design tokens finalised
-- [ ] Build started
+Never push to a different branch expecting the live site to update.
 
 ---
 
-*Created: 2026-03-06*
-*Status: SPEC COMPLETE — READY TO BUILD*
+## Acceptance for Home v1
+
+- [ ] Pixel-matches `dir-brutalist.jsx` at 1440px width
+- [ ] All motion specs from [docs/SPEC.md](docs/SPEC.md) Motion table implemented
+- [ ] `prefers-reduced-motion` honoured
+- [ ] Lighthouse: Performance ≥ 90, Accessibility ≥ 95, SEO ≥ 95
+- [ ] Real photos slot in cleanly (placeholders are easy to swap)
+- [ ] Mobile: stack hero columns, reduce H1 to 64px, kill cursor-driven motion
+
+---
+
+*Last updated: 2026-04-27*
