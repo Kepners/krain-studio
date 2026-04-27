@@ -5,7 +5,7 @@ import { palette } from "@/lib/tokens";
 import { AnimLink } from "@/components/ui/AnimLink";
 import { MagneticBtn } from "@/components/ui/MagneticBtn";
 
-const LOGO_HEIGHT = 54;
+const LOGO_HEIGHT = 52;
 
 const NAV = [
   { label: "Work", href: "#work" },
@@ -27,7 +27,7 @@ export function Header() {
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         background: "rgba(236,231,221,0.78)",
-        padding: "13px 32px",
+        padding: "14px 32px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -37,10 +37,10 @@ export function Header() {
     >
       <a href="#" aria-label="Krain Studio home" style={{ display: "flex", alignItems: "center" }}>
         <Image
-          src="/krain/logo.png"
+          src="/krain/logo-wordmark.png"
           alt="Krain Studio"
-          width={222}
-          height={54}
+          width={137}
+          height={52}
           priority
           className="krain-logo"
           style={{ height: LOGO_HEIGHT, width: "auto", display: "block" }}
