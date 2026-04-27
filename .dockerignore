@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.vscode
+.claude
+docs/source
+*.log
+.env*
+!.env.example
+README.md

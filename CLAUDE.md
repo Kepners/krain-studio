@@ -35,9 +35,15 @@ context only — do not implement them.
 | Styling    | Tailwind CSS v4                         |
 | Motion     | Framer Motion v12                       |
 | Fonts      | Geist + Geist Mono (via `next/font`)    |
-| Hosting    | Vercel (auto-deploy on `git push`)      |
-| Domain     | `krain.studio` (TBD)                    |
+| Hosting    | **Contabo VPS (`94.72.97.251`)** — Docker container behind Caddy, deployed via `/opt/stack` |
+| Domain     | `krain.studio` (Porkbun-managed)        |
 | Repo       | `github.com/Kepners/krain-studio`       |
+
+> **No Vercel.** This project lives on the Contabo control plane. See the
+> [contabo-infra workspace](../../../@Projects/contabo-infra/) (`AGENTS.md`,
+> `BRAIN.md`, `PLATFORM.md`, `DNS-REFERENCE.md`) for the deploy and DNS
+> source-of-truth. Deploy = git push to `main`, then SSH `contabo` and run
+> `/opt/stack/bin/deploy-site.sh --site-dir /opt/stack/sites/krain-studio --service krain --branch main --healthcheck-url https://www.krain.studio`.
 
 ---
 
@@ -146,8 +152,8 @@ See [docs/SPEC.md](docs/SPEC.md) for the full type scale and motion timing table
 
 ```bash
 npm run dev      # localhost:3000
-npm run build    # production build
-git push         # auto-deploys to Vercel
+npm run build    # production build (uses Next.js standalone output for Docker)
+docker build .   # locally validate the production image
 ```
 
 ---
@@ -162,7 +168,18 @@ git commit -m "🤖 feat/fix: description"
 git push origin main
 ```
 
-Never push to a different branch expecting the live site to update.
+After push, deploy on Contabo:
+
+```bash
+ssh contabo "/opt/stack/bin/deploy-site.sh \
+  --site-dir /opt/stack/sites/krain-studio \
+  --service krain \
+  --branch main \
+  --healthcheck-url https://www.krain.studio"
+```
+
+The script does git fetch + rebuild + health check + rollback on failure.
+Caddy fronts the container with auto-TLS via Let's Encrypt.
 
 ---
 
