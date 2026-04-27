@@ -16,9 +16,9 @@ export function Stats() {
         gridTemplateColumns: "repeat(4, 1fr)",
       }}
     >
-      <Stat value={17} label="Live + completed projects" />
-      <Stat value={1184} label="Sheets issued · 2025" />
-      <Stat value={0} label="RFIs unanswered today" />
+      <Stat value={30} label="Packages found in archive" />
+      <Stat value={1771} label="Drawing PDFs indexed" />
+      <Stat value={8} label="Client groups identified" />
       <Stat value="Q3 26" label="Next opening" />
 
       <style>{`
