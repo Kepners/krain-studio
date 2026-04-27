@@ -185,13 +185,16 @@ Caddy fronts the container with auto-TLS via Let's Encrypt.
 
 ## Acceptance for Home v1
 
-- [ ] Pixel-matches `dir-brutalist.jsx` at 1440px width
-- [ ] All motion specs from [docs/SPEC.md](docs/SPEC.md) Motion table implemented
-- [ ] `prefers-reduced-motion` honoured
+- [x] Live on production at `https://www.krain.studio/` (apex 301-redirects to www)
+- [x] Live preview at `https://preview-krain.buildsales.homes/`
+- [x] Let's Encrypt cert via Caddy (auto-renewing)
+- [x] `prefers-reduced-motion` honoured
+- [x] All motion specs from [docs/SPEC.md](docs/SPEC.md) Motion table implemented
+- [ ] Pixel-comparison against `docs/source/krain/dir-brutalist.jsx` at 1440px
 - [ ] Lighthouse: Performance ≥ 90, Accessibility ≥ 95, SEO ≥ 95
 - [ ] Real photos slot in cleanly (placeholders are easy to swap)
-- [ ] Mobile: stack hero columns, reduce H1 to 64px, kill cursor-driven motion
+- [ ] Mobile QA pass
 
 ---
 
-*Last updated: 2026-04-27*
+*Last updated: 2026-04-27 — live on Contabo*
