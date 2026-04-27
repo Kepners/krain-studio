@@ -5,6 +5,8 @@ import { palette } from "@/lib/tokens";
 import { AnimLink } from "@/components/ui/AnimLink";
 import { MagneticBtn } from "@/components/ui/MagneticBtn";
 
+const LOGO_HEIGHT = 54;
+
 const NAV = [
   { label: "Work", href: "#work" },
   { label: "Process", href: "#process" },
@@ -17,6 +19,7 @@ const NAV = [
 export function Header() {
   return (
     <header
+      className="krain-header"
       style={{
         position: "sticky",
         top: 0,
@@ -24,7 +27,7 @@ export function Header() {
         backdropFilter: "blur(12px)",
         WebkitBackdropFilter: "blur(12px)",
         background: "rgba(236,231,221,0.78)",
-        padding: "20px 32px",
+        padding: "13px 32px",
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
@@ -36,10 +39,11 @@ export function Header() {
         <Image
           src="/krain/logo.png"
           alt="Krain Studio"
-          width={140}
-          height={34}
+          width={222}
+          height={54}
           priority
-          style={{ height: 34, width: "auto", display: "block" }}
+          className="krain-logo"
+          style={{ height: LOGO_HEIGHT, width: "auto", display: "block" }}
         />
       </a>
       <nav
@@ -62,7 +66,18 @@ export function Header() {
       </MagneticBtn>
       <style>{`
         @media (max-width: 900px) {
+          .krain-header { padding: 14px 20px !important; }
           .krain-nav { display: none !important; }
+          .krain-logo { height: 48px !important; }
+        }
+
+        @media (max-width: 520px) {
+          .krain-header {
+            gap: 16px !important;
+            padding: 12px 16px !important;
+          }
+
+          .krain-logo { height: 42px !important; }
         }
       `}</style>
     </header>
