@@ -9,6 +9,13 @@ type HeroPlateProps = {
 
 export function HeroPlate({ src, alt }: HeroPlateProps) {
   if (src) {
+    const ticks = [
+      { top: 14, left: 14 },
+      { top: 14, right: 14 },
+      { bottom: 14, left: 14 },
+      { bottom: 14, right: 14 },
+    ] as const;
+
     return (
       <div
         style={{
@@ -18,7 +25,7 @@ export function HeroPlate({ src, alt }: HeroPlateProps) {
           borderRadius: 8,
           overflow: "hidden",
           boxShadow: `0 30px 80px rgba(26,29,51,.18), 0 0 0 1px ${palette.rule}`,
-          background: "#f3f0e8",
+          background: palette.bg,
         }}
       >
         <Image
@@ -27,8 +34,51 @@ export function HeroPlate({ src, alt }: HeroPlateProps) {
           fill
           priority
           sizes="(max-width: 900px) 100vw, 45vw"
-          style={{ objectFit: "contain" }}
+          style={{ objectFit: "cover", mixBlendMode: "multiply" }}
         />
+        {/* mono title-block overlay — the site's drawing-plate language, on cream */}
+        <div
+          aria-hidden
+          style={{
+            position: "absolute",
+            inset: 0,
+            pointerEvents: "none",
+            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+            fontSize: 10,
+            letterSpacing: "0.2em",
+            textTransform: "uppercase",
+            color: palette.inkSoft,
+          }}
+        >
+          <span style={{ position: "absolute", top: 16, left: 16, opacity: 0.75 }}>
+            [ Roof eaves · 1:5 ]
+          </span>
+          <span style={{ position: "absolute", bottom: 16, left: 16, opacity: 0.75 }}>
+            Drawn at 1:5
+          </span>
+          <span style={{ position: "absolute", bottom: 16, right: 16, opacity: 0.5 }}>
+            Krain · detail
+          </span>
+          {ticks.map((p, i) => (
+            <span
+              key={i}
+              style={{
+                position: "absolute",
+                width: 12,
+                height: 12,
+                opacity: 0.4,
+                top: "top" in p ? p.top : undefined,
+                left: "left" in p ? p.left : undefined,
+                right: "right" in p ? p.right : undefined,
+                bottom: "bottom" in p ? p.bottom : undefined,
+                borderTop: i < 2 ? `1px solid ${palette.ink}` : "none",
+                borderBottom: i >= 2 ? `1px solid ${palette.ink}` : "none",
+                borderLeft: i % 2 === 0 ? `1px solid ${palette.ink}` : "none",
+                borderRight: i % 2 === 1 ? `1px solid ${palette.ink}` : "none",
+              }}
+            />
+          ))}
+        </div>
       </div>
     );
   }
