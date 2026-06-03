@@ -183,6 +183,33 @@ export default function ServicesPage() {
         </P>
         <Bullets items={WHAT_I_DO} cols={2} />
 
+        <H2>Service categories</H2>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(300px, 1fr))",
+            gap: "28px 36px",
+            margin: "8px 0 8px",
+            maxWidth: 900,
+          }}
+        >
+          {(
+            [
+              ["Technical CAD production", "AutoCAD 2D working drawings, general arrangements, construction information and drawing updates."],
+              ["Construction details", "1:5 and 1:10 details for junctions, thresholds, eaves, openings, walls, floors and site-specific conditions."],
+              ["Stage 4/5 documentation", "Support with technical design, construction information, drawing packages and coordinated issue sets."],
+              ["Building Control drawing support", "Drawing support for Building Regulations, warranty and technical package requirements. This does not replace the architect, engineer, warranty provider or Building Control body."],
+              ["Drawing audits & buildability reviews", "Checks for missing information, conflicting references, unclear details, schedule issues and coordination gaps."],
+              ["Site and query support", "Technical mark-ups, clarification notes, RFI support and action lists to help teams understand what needs resolving."],
+            ] as Array<[string, string]>
+          ).map(([t, d]) => (
+            <div key={t} style={{ borderTop: `1px solid ${palette.rule}`, paddingTop: 16 }}>
+              <div style={{ fontFamily: SANS, fontSize: 19, fontWeight: 400, letterSpacing: "-0.01em", marginBottom: 8 }}>{t}</div>
+              <div style={{ fontSize: 14.5, lineHeight: 1.55, opacity: 0.78 }}>{d}</div>
+            </div>
+          ))}
+        </div>
+
         <H2 id="review">Drawing review &amp; technical audit support</H2>
         <P>
           Not every issue is obvious on first review. Drawing packages can contain missing references,

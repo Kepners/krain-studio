@@ -54,9 +54,6 @@ export function HeroPlate({ src, alt, label }: HeroPlateProps) {
           <span style={{ position: "absolute", top: 16, left: 16, opacity: 0.75 }}>
             [ {label ?? "Detail · 1:5"} ]
           </span>
-          <span style={{ position: "absolute", bottom: 16, left: 16, opacity: 0.75 }}>
-            Drawn at 1:5
-          </span>
           <span style={{ position: "absolute", bottom: 16, right: 16, opacity: 0.5 }}>
             Krain · detail
           </span>

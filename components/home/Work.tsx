@@ -141,8 +141,9 @@ export function Work() {
           margin: "48px 0 0",
         }}
       >
-        Examples are anonymised or representative — live client names, project
-        locations, title blocks and original drawings are not published.
+        Project examples shown on this site are representative and anonymised.
+        Project names, locations, client details, title blocks and identifying
+        information have been changed or removed to protect confidentiality.
       </p>
 
       <style>{`

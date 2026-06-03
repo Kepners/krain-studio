@@ -5,12 +5,12 @@ import { palette } from "@/lib/tokens";
 import { AnimLink } from "@/components/ui/AnimLink";
 
 const SERVICES: Array<[string, string, string]> = [
-  ["A", "Technical CAD production", "AutoCAD 2D · working drawings"],
-  ["B", "Construction details", "1:5 / 1:10 junctions · thresholds · eaves"],
-  ["C", "Stage 4 / 5 documentation", "Technical design · construction info"],
-  ["D", "Building Control support", "Part L · Part B · NHBC / LBC drawings"],
-  ["E", "Drawing review & audit", "Package audits · coordination · buildability"],
-  ["F", "Site & query support", "RFIs · mark-ups · action lists"],
+  ["A", "Technical CAD production", "AutoCAD 2D working drawings, general arrangements, construction information and drawing updates."],
+  ["B", "Construction details", "1:5 and 1:10 details for junctions, thresholds, eaves, openings, walls, floors and site-specific conditions."],
+  ["C", "Stage 4 / 5 documentation", "Technical design, construction information, drawing packages and coordinated issue sets."],
+  ["D", "Building Control drawing support", "Drawing support for Building Regulations, warranty and technical package requirements — this does not replace the architect, engineer, warranty provider or Building Control body."],
+  ["E", "Drawing audits & buildability reviews", "Checks for missing information, conflicting references, unclear details, schedule issues and coordination gaps."],
+  ["F", "Site and query support", "Technical mark-ups, clarification notes, RFI support and action lists to help teams understand what needs resolving."],
 ];
 
 function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: number }) {

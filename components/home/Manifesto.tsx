@@ -83,10 +83,13 @@ export function Manifesto() {
               margin: 0,
             }}
           >
-            A building is the sum of its <RevealWord>junctions.</RevealWord>
-            <br />
-            The rest is marketing.
+            A building succeeds or fails in the <RevealWord>junctions.</RevealWord>
           </h2>
+        </FadeIn>
+        <FadeIn delay={80}>
+          <p style={{ fontSize: 18, lineHeight: 1.55, opacity: 0.82, maxWidth: 640, marginTop: 24 }}>
+            Krain Studio helps turn design intent into coordinated, buildable information.
+          </p>
         </FadeIn>
         <div
           className="krain-manifesto-cols"

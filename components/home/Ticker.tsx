@@ -23,7 +23,7 @@ export function Ticker() {
         <span className="krain-pulse" style={{ color: palette.accent }}>
           ●{" "}
         </span>
-        Live · Maple Court · Stage 5
+        Representative package · fictional project name
       </span>
       <span style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
         <span>RIBA 4–5</span>

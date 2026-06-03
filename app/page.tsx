@@ -2,9 +2,11 @@ import { Ticker } from "@/components/home/Ticker";
 import { Header } from "@/components/home/Header";
 import { Hero } from "@/components/home/Hero";
 import { Stats } from "@/components/home/Stats";
+import { WhoIHelp } from "@/components/home/WhoIHelp";
+import { Services } from "@/components/home/Services";
+import { DrawingReview } from "@/components/home/DrawingReview";
 import { Work } from "@/components/home/Work";
 import { Manifesto } from "@/components/home/Manifesto";
-import { Services } from "@/components/home/Services";
 import { Journal } from "@/components/home/Journal";
 import { ContactBand } from "@/components/home/ContactBand";
 import { Footer } from "@/components/home/Footer";
@@ -19,9 +21,11 @@ export default function Home() {
         <Header />
         <Hero />
         <Stats />
+        <WhoIHelp />
+        <Services />
+        <DrawingReview />
         <Work />
         <Manifesto />
-        <Services />
         <Journal />
         <ContactBand />
         <Footer />

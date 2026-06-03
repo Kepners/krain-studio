@@ -76,9 +76,21 @@ export function ContactBand() {
         >
           Got a set of plans?
         </h2>
+        <p
+          style={{
+            fontSize: 17,
+            lineHeight: 1.6,
+            opacity: 0.8,
+            maxWidth: 640,
+            marginTop: 28,
+          }}
+        >
+          Send the current PDF/DWG set, drawing register, schedules and a short note
+          on the issue, deadline or package stage.
+        </p>
         <div
           style={{
-            marginTop: 56,
+            marginTop: 28,
             display: "flex",
             gap: 18,
             alignItems: "center",
