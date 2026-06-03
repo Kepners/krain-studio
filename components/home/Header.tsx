@@ -8,11 +8,11 @@ import { MagneticBtn } from "@/components/ui/MagneticBtn";
 const LOGO_HEIGHT = 52;
 
 const NAV = [
-  { label: "Work", href: "/#work" },
+  { label: "Work", href: "/work" },
   { label: "Services", href: "/services" },
   { label: "Journal", href: "/#journal" },
-  { label: "About", href: "/#about" },
-  { label: "Contact", href: "/#contact" },
+  { label: "About", href: "/about" },
+  { label: "Contact", href: "/contact" },
 ];
 
 export function Header() {

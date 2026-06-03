@@ -4,7 +4,7 @@ import { palette } from "@/lib/tokens";
 type WorkItem = { name: string; scope: string; code: string; img: string };
 
 // Anonymised, representative samples — cropped from real drawings with all
-// title blocks, project names, locations and photos removed (see sync notes).
+// title blocks, project names, locations and photos removed.
 const PROJECTS: WorkItem[] = [
   { name: "Maple Court", scope: "Residential GA plans", code: "GA-02", img: "/krain/work-01.png" },
   { name: "Eastgate House", scope: "Site plan & elevations", code: "PL-03", img: "/krain/work-02.png" },
@@ -93,35 +93,39 @@ function WorkCard({ p }: { p: WorkItem }) {
   );
 }
 
-export function Work() {
+// `embedded` hides the section heading (used on the dedicated /work page,
+// which supplies its own page heading).
+export function Work({ embedded = false }: { embedded?: boolean }) {
   return (
-    <section id="work" style={{ position: "relative", zIndex: 2, padding: "120px 32px" }}>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-end",
-          gap: 24,
-          flexWrap: "wrap",
-          marginBottom: 48,
-        }}
-      >
-        <h2 style={{ fontFamily: "var(--font-geist), sans-serif", fontWeight: 200, fontSize: "clamp(40px, 7vw, 64px)", margin: 0, letterSpacing: "-0.04em" }}>
-          Selected work
-        </h2>
-        <span
+    <section id="work" style={{ position: "relative", zIndex: 2, padding: embedded ? "0 32px 40px" : "120px 32px" }}>
+      {!embedded && (
+        <div
           style={{
-            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-            fontSize: 11,
-            letterSpacing: "0.16em",
-            textTransform: "uppercase",
-            color: palette.inkSoft,
-            opacity: 0.7,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            gap: 24,
+            flexWrap: "wrap",
+            marginBottom: 48,
           }}
         >
-          Anonymised · representative samples
-        </span>
-      </div>
+          <h2 style={{ fontFamily: "var(--font-geist), sans-serif", fontWeight: 200, fontSize: "clamp(40px, 7vw, 64px)", margin: 0, letterSpacing: "-0.04em" }}>
+            Selected work
+          </h2>
+          <span
+            style={{
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontSize: 11,
+              letterSpacing: "0.16em",
+              textTransform: "uppercase",
+              color: palette.inkSoft,
+              opacity: 0.7,
+            }}
+          >
+            Anonymised · representative samples
+          </span>
+        </div>
+      )}
 
       <div className="krain-job-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "44px 28px" }}>
         {PROJECTS.map((p, i) => (
