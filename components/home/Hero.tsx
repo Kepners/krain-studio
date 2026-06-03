@@ -5,7 +5,7 @@ import { motion, useReducedMotion, useScroll, useSpring, useTransform } from "fr
 import { palette } from "@/lib/tokens";
 import { FadeIn } from "@/components/ui/FadeIn";
 import { TiltPlate } from "@/components/ui/TiltPlate";
-import { HeroPlate } from "@/components/ui/HeroPlate";
+import { HeroSlideshow } from "@/components/ui/HeroSlideshow";
 
 export function Hero() {
   const sectionRef = useRef<HTMLElement>(null);
@@ -173,10 +173,7 @@ export function Hero() {
 
         <FadeIn delay={300}>
           <TiltPlate max={4} style={{ width: "100%" }}>
-            <HeroPlate
-              src="/krain/hero.png"
-              alt="Detailed construction drawing — 1:5 roof eaves junction, Krain Studio"
-            />
+            <HeroSlideshow />
           </TiltPlate>
         </FadeIn>
       </div>
