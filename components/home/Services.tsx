@@ -6,7 +6,7 @@ import { palette } from "@/lib/tokens";
 const SERVICES: Array<[string, string, string]> = [
   ["A", "Construction package", "RIBA 4–5 · tender / building-control set"],
   ["B", "1:5 / 1:10 details", "Junctions · thresholds · cills · eaves"],
-  ["C", "NBS specification", "Clause-level · performance-written"],
+  ["C", "Specifications", "Self-written · NHBC / LBC"],
   ["D", "Building Control", "Part L · Part B · Approved Inspector"],
   ["E", "Site / RFI", "Live queries · same-day response"],
   ["F", "Peer review", "Pre-tender check on another set"],

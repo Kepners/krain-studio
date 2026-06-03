@@ -173,7 +173,10 @@ export function Hero() {
 
         <FadeIn delay={300}>
           <TiltPlate max={4} style={{ width: "100%" }}>
-            <HeroPlate />
+            <HeroPlate
+              src="/krain/hero.png"
+              alt="Detailed construction drawing — 1:5 roof eaves junction, Krain Studio"
+            />
           </TiltPlate>
         </FadeIn>
       </div>

@@ -27,9 +27,9 @@ export const metadata: Metadata = {
     "RIBA Stage 5",
     "technical design",
     "building details",
-    "NBS specification",
-    "Sheffield architect",
-    "London architect",
+    "NHBC specification",
+    "Biggleswade architect",
+    "Bedfordshire architect",
   ],
   metadataBase: new URL("https://krain.studio"),
   openGraph: {

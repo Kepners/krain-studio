@@ -1,6 +1,38 @@
+import Image from "next/image";
 import { palette } from "@/lib/tokens";
 
-export function HeroPlate() {
+type HeroPlateProps = {
+  /** When set, renders the real drawing/photo. Falls back to the placeholder when omitted. */
+  src?: string;
+  alt?: string;
+};
+
+export function HeroPlate({ src, alt }: HeroPlateProps) {
+  if (src) {
+    return (
+      <div
+        style={{
+          position: "relative",
+          width: "100%",
+          aspectRatio: "4/3",
+          borderRadius: 8,
+          overflow: "hidden",
+          boxShadow: `0 30px 80px rgba(26,29,51,.18), 0 0 0 1px ${palette.rule}`,
+          background: "#f3f0e8",
+        }}
+      >
+        <Image
+          src={src}
+          alt={alt ?? "Detailed construction drawing — Krain Studio"}
+          fill
+          priority
+          sizes="(max-width: 900px) 100vw, 45vw"
+          style={{ objectFit: "contain" }}
+        />
+      </div>
+    );
+  }
+
   const ticks = [
     { top: 14, left: 14 },
     { top: 14, right: 14 },

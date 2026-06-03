@@ -27,8 +27,8 @@ export function Ticker() {
       </span>
       <span style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
         <span>RIBA 4–5</span>
-        <span>NBS</span>
-        <span>SHF · LDN</span>
+        <span>NHBC / LBC</span>
+        <span>BGW · BEDS</span>
       </span>
     </div>
   );

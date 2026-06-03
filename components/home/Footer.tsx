@@ -18,7 +18,7 @@ export function Footer() {
       }}
     >
       <span>© Krain Studio · MMXXVI</span>
-      <span>Sheffield / London</span>
+      <span>Biggleswade · Bedfordshire</span>
     </footer>
   );
 }
