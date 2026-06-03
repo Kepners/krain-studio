@@ -544,7 +544,7 @@ export function ReviewProcessFlow() {
                 fontSize: 13,
                 lineHeight: 1.45,
                 letterSpacing: "0.02em",
-                color: last ? ACCENT : INK,
+                color: last ? ACCENT_TEXT : INK,
                 fontWeight: last ? 600 : 400,
               }}
             >
@@ -609,7 +609,7 @@ export function PackageRiskBuckets() {
               flexDirection: "column",
             }}
           >
-            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: ACCENT, marginBottom: 16 }}>
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: ACCENT_TEXT, marginBottom: 16 }}>
               0{i + 1}
             </div>
             <div
