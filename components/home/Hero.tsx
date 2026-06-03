@@ -144,8 +144,8 @@ export function Hero() {
           <TiltPlate max={4} style={{ width: "100%" }}>
             <HeroPlate
               src="/krain/hero-detail.png"
-              alt="Window head and cill construction details with building section — anonymised sample, Krain Studio"
-              label="Window detail · 1:5"
+              alt="Sectional construction detail through wall, floor and roof — anonymised sample, Krain Studio"
+              label="Sectional detail · 1:20"
             />
           </TiltPlate>
         </FadeIn>
