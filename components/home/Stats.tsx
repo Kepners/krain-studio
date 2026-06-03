@@ -1,5 +1,6 @@
 import { palette } from "@/lib/tokens";
 import { Stat } from "@/components/ui/Stat";
+import { siteStats } from "@/lib/siteStats";
 
 export function Stats() {
   return (
@@ -16,10 +17,10 @@ export function Stats() {
         gridTemplateColumns: "repeat(4, 1fr)",
       }}
     >
-      <Stat value={30} label="Packages found in archive" />
-      <Stat value={1771} label="Drawing PDFs indexed" />
-      <Stat value={8} label="Client groups identified" />
-      <Stat value="Q3 26" label="Next opening" />
+      <Stat value={siteStats.packages} label="Project packages" />
+      <Stat value={siteStats.pdfs} label="PDF files" />
+      <Stat value={siteStats.dwgs} label="DWG files" />
+      <Stat value={siteStats.nextOpening} label="Next opening" />
 
       <style>{`
         @media (max-width: 900px) {
