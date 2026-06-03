@@ -10,7 +10,7 @@
 const config = {
   email: "matt@krain.studio",
   whatsappNumber: "447740363639", // 07740 363639 in international format
-  linkedinUrl: "", // TODO: set me — e.g. "https://www.linkedin.com/in/your-handle"
+  linkedinUrl: "https://www.linkedin.com/company/krain-studio/", // company page
 } as const;
 
 // Pre-filled message that drops into WhatsApp when a visitor taps the button.
