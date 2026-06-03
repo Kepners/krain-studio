@@ -31,13 +31,13 @@ export const metadata: Metadata = {
     "Biggleswade architect",
     "Bedfordshire architect",
   ],
-  metadataBase: new URL("https://krain.studio"),
+  metadataBase: new URL("https://www.krain.studio"),
   openGraph: {
     title: "Krain Studio — Detailed construction design",
     description:
       "RIBA Stage 4–5 construction packages. Drawings that turn permission into a buildable thing without a clipboard of RFIs.",
     type: "website",
-    url: "https://krain.studio",
+    url: "https://www.krain.studio",
     siteName: "Krain Studio",
   },
   twitter: {

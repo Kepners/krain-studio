@@ -113,6 +113,24 @@ export function Bullets({ items }: { items: string[] }) {
   );
 }
 
+/** Inline in-content link — accent-coloured, underlined, server-rendered (no JS). */
+export function A({ href, children }: { href: string; children: ReactNode }) {
+  return (
+    <a
+      href={href}
+      style={{
+        color: palette.accent,
+        textDecoration: "underline",
+        textUnderlineOffset: "0.18em",
+        textDecorationThickness: "1px",
+        textDecorationColor: "rgba(255, 77, 110, 0.45)",
+      }}
+    >
+      {children}
+    </a>
+  );
+}
+
 export function Quote({ children }: { children: ReactNode }) {
   return (
     <blockquote

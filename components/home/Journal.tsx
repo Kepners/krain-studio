@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { palette } from "@/lib/tokens";
 import { AnimLink } from "@/components/ui/AnimLink";
-import { JOURNAL, type JournalEntry } from "@/lib/journal";
+import type { JournalEntry } from "@/lib/journal";
 
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 const SANS = "var(--font-geist), sans-serif";
@@ -138,8 +138,8 @@ function CompactCard({ entry }: { entry: JournalEntry }) {
   );
 }
 
-export function Journal() {
-  const [featured, ...rest] = JOURNAL;
+export function Journal({ entries }: { entries: JournalEntry[] }) {
+  const [featured, ...rest] = entries;
   if (!featured) return null;
 
   return (

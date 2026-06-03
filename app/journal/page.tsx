@@ -3,7 +3,7 @@ import { Ticker } from "@/components/home/Ticker";
 import { Header } from "@/components/home/Header";
 import { ContactBand } from "@/components/home/ContactBand";
 import { Footer } from "@/components/home/Footer";
-import { JOURNAL } from "@/lib/journal";
+import { PUBLISHED } from "@/components/journal/content";
 import { palette } from "@/lib/tokens";
 
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   title: "Journal — Notes on technical drawing, detailing & coordination | Krain Studio",
   description:
     "Field notes and technical guides on construction-stage drawings, schedules, detailing and drawing coordination from Krain Studio.",
-  alternates: { canonical: "https://krain.studio/journal" },
+  alternates: { canonical: "https://www.krain.studio/journal" },
 };
 
 export default function JournalIndexPage() {
@@ -70,7 +70,7 @@ export default function JournalIndexPage() {
           margin: "0 auto",
         }}
       >
-        {JOURNAL.map((entry) => (
+        {PUBLISHED.map((entry) => (
           <a
             key={entry.slug}
             href={`/journal/${entry.slug}`}

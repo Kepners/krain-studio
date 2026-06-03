@@ -19,9 +19,43 @@ export type JournalEntry = {
   description: string;
   /** SEO keywords */
   keywords: string[];
+  /** ISO-8601 with offset for datePublished / og:published_time, e.g. "2026-06-03T09:00:00+01:00" */
+  publishedISO?: string;
+  /** ISO-8601 with offset for dateModified — bump only on a real edit */
+  modifiedISO?: string;
+  /** Social share image (1200×630), absolute-from-root, e.g. "/krain/journal/<slug>-og.png" */
+  ogImage?: string;
 };
 
 export const JOURNAL: JournalEntry[] = [
+  {
+    slug: "what-i-check-before-drawings-go-to-site",
+    title: "What I check before a drawing package goes to site",
+    date: "Jun 2026",
+    dateISO: "2026-06-03",
+    publishedISO: "2026-06-03T09:00:00+01:00",
+    modifiedISO: "2026-06-03T09:00:00+01:00",
+    kind: "Technical guide",
+    readingTime: "13 min read",
+    excerpt:
+      "Before architectural drawings go to site, they need more than a quick visual check. This article explains the key checks behind a proper technical drawing review, from drawing registers and revisions to schedules, drainage, structure and buildability.",
+    metaTitle: "What I Check Before a Drawing Package Goes to Site | Krain Studio",
+    description:
+      "A practical guide to architectural drawing review, covering drawing registers, revisions, schedules, detail references, buildability, drainage coordination and site-readiness checks.",
+    keywords: [
+      "architectural drawing review",
+      "drawing package review",
+      "construction drawings",
+      "drawing register",
+      "drawing revisions",
+      "buildability review",
+      "drainage coordination",
+      "RIBA Stage 4 Stage 5",
+      "technical drawing audit",
+      "site-readiness check",
+    ],
+    ogImage: "/krain/journal/what-i-check-before-drawings-go-to-site-og.png",
+  },
   {
     slug: "why-window-and-door-schedules-go-wrong",
     title: "Why window and door schedules go wrong",
@@ -46,6 +80,9 @@ export const JOURNAL: JournalEntry[] = [
       "buildability review",
       "technical drawing audit",
     ],
+    publishedISO: "2026-06-03T09:00:00+01:00",
+    modifiedISO: "2026-06-03T09:00:00+01:00",
+    ogImage: "/krain/journal/why-window-and-door-schedules-go-wrong-og.png",
   },
 ];
 

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
-import { JOURNAL } from "@/lib/journal";
+import { PUBLISHED } from "@/components/journal/content";
 
-const SITE = "https://krain.studio";
+const SITE = "https://www.krain.studio";
 
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
@@ -15,9 +15,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: `${SITE}/contact`, lastModified: now, changeFrequency: "yearly", priority: 0.6 },
   ];
 
-  const posts: MetadataRoute.Sitemap = JOURNAL.map((entry) => ({
+  const posts: MetadataRoute.Sitemap = PUBLISHED.map((entry) => ({
     url: `${SITE}/journal/${entry.slug}`,
-    lastModified: new Date(entry.dateISO),
+    lastModified: new Date(entry.modifiedISO ?? entry.publishedISO ?? entry.dateISO),
     changeFrequency: "yearly",
     priority: 0.7,
   }));

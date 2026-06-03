@@ -336,3 +336,295 @@ export function CommonErrorsGrid() {
     </div>
   );
 }
+
+/* ================================================================== */
+/*  "What I check before a drawing package goes to site" — diagrams    */
+/* ================================================================== */
+
+/* ------------------------------------------------------------------ */
+/* Hero — a reviewer's annotated set on the board                      */
+/* ------------------------------------------------------------------ */
+
+export function DrawingReviewDesk() {
+  const pins = [
+    { y: 122, label: "REGISTER" },
+    { y: 176, label: "REVISION" },
+    { y: 230, label: "SCHEDULE" },
+    { y: 284, label: "DETAILS" },
+    { y: 338, label: "BUILDABILITY" },
+  ];
+
+  return (
+    <svg
+      viewBox="0 0 960 440"
+      role="img"
+      aria-label="An abstract drawing-review desk: a stack of layered architectural sheets on a CAD grid, with a margin of coral review pins labelled Register, Revision, Schedule, Details and Buildability."
+      style={{
+        width: "100%",
+        height: "auto",
+        display: "block",
+        background: PLATE,
+        border: `1px solid ${RULE}`,
+      }}
+    >
+      <defs>
+        <pattern id="krain-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+          <path d="M32 0 L0 0 0 32" fill="none" stroke={INK} strokeWidth="0.5" opacity="0.08" />
+        </pattern>
+      </defs>
+
+      <rect x="0" y="0" width="960" height="440" fill="url(#krain-grid)" />
+
+      <text x="40" y="52" fontFamily={MONO} fontSize="11" letterSpacing="3" fill={INK} opacity="0.55">
+        PRE-ISSUE REVIEW
+      </text>
+
+      {/* back sheet, slightly skewed */}
+      <g transform="rotate(-2.4 300 250)">
+        <rect x="92" y="92" width="430" height="300" fill={palette.bgRaise} stroke={INK} strokeWidth="1" opacity="0.5" />
+      </g>
+
+      {/* front sheet */}
+      <rect x="64" y="104" width="450" height="300" fill={palette.bgRaise} stroke={INK} strokeWidth="1.3" opacity="0.97" />
+
+      {/* faint plan linework on the front sheet */}
+      <g stroke={INK} fill="none" opacity="0.42">
+        <rect x="98" y="140" width="382" height="206" strokeWidth="1.2" />
+        <line x1="250" y1="140" x2="250" y2="346" strokeWidth="0.9" opacity="0.7" />
+        <line x1="98" y1="250" x2="480" y2="250" strokeWidth="0.9" opacity="0.7" />
+        {/* window openings punched into the top wall */}
+        <line x1="150" y1="140" x2="200" y2="140" strokeWidth="3.2" stroke={palette.bgRaise} />
+        <line x1="150" y1="140" x2="200" y2="140" strokeWidth="1.2" />
+        <line x1="332" y1="140" x2="382" y2="140" strokeWidth="3.2" stroke={palette.bgRaise} />
+        <line x1="332" y1="140" x2="382" y2="140" strokeWidth="1.2" />
+        {/* door swing */}
+        <path d="M300 346 A40 40 0 0 1 340 306" strokeWidth="1" />
+        <line x1="300" y1="346" x2="300" y2="306" strokeWidth="1" />
+      </g>
+
+      {/* dimension line */}
+      <g stroke={INK} opacity="0.32">
+        <line x1="98" y1="368" x2="480" y2="368" strokeWidth="0.8" />
+        <line x1="98" y1="362" x2="98" y2="374" strokeWidth="0.8" />
+        <line x1="480" y1="362" x2="480" y2="374" strokeWidth="0.8" />
+      </g>
+
+      {/* title block */}
+      <rect x="408" y="356" width="100" height="44" fill="none" stroke={INK} strokeWidth="0.9" opacity="0.4" />
+      <line x1="408" y1="372" x2="508" y2="372" stroke={INK} strokeWidth="0.7" opacity="0.4" />
+
+      {/* markup margin */}
+      <line x1="600" y1="92" x2="600" y2="392" stroke={RULE} strokeWidth="1" />
+      {pins.map((p) => (
+        <g key={p.label}>
+          <line x1="520" y1={p.y} x2="612" y2={p.y} stroke={ACCENT} strokeWidth="1.2" strokeDasharray="4 4" opacity="0.55" />
+          <circle cx="624" cy={p.y} r="9" fill="none" stroke={ACCENT} strokeWidth="1.2" opacity="0.5" />
+          <circle cx="624" cy={p.y} r="4" fill={ACCENT} />
+          <text x="646" y={p.y + 4} fontFamily={MONO} fontSize="13" letterSpacing="2" fill={INK} opacity="0.85">
+            {p.label}
+          </text>
+        </g>
+      ))}
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* The ten checks — at-a-glance jump list (doubles as a mini contents) */
+/* ------------------------------------------------------------------ */
+
+const TEN_CHECKS: Array<{ n: string; label: string; anchor: string }> = [
+  { n: "01", label: "Register matches the files", anchor: "drawing-register" },
+  { n: "02", label: "Plans, elevations & sections agree", anchor: "coordinated-set" },
+  { n: "03", label: "Detail references are useful", anchor: "detail-references" },
+  { n: "04", label: "Windows & doors match the schedules", anchor: "window-door-schedules" },
+  { n: "05", label: "Dimensions are clear enough to build from", anchor: "dimensions" },
+  { n: "06", label: "Drainage is coordinated", anchor: "drainage" },
+  { n: "07", label: "Structure & architecture are coordinated", anchor: "structure" },
+  { n: "08", label: "Building Control & warranty notes checked", anchor: "building-control" },
+  { n: "09", label: "Clear to someone who wasn’t in the meetings", anchor: "clarity" },
+  { n: "10", label: "A clear action list is issued back", anchor: "output" },
+];
+
+export function TenChecksList() {
+  return (
+    <>
+      <style>{`
+        .krain-ten-checks { grid-template-columns: 1fr 1fr; }
+        .krain-check { transition: background .25s ease; }
+        .krain-check:hover { background: ${palette.plate}; }
+        .krain-check:hover .krain-check-arrow { opacity: 1; transform: translateX(3px); }
+        @media (max-width: 640px) { .krain-ten-checks { grid-template-columns: 1fr; } }
+      `}</style>
+      <nav
+        aria-label="The ten checks — jump to a section"
+        className="krain-ten-checks"
+        style={{ display: "grid", gap: 1, background: RULE, border: `1px solid ${RULE}` }}
+      >
+        {TEN_CHECKS.map((c) => (
+          <a
+            key={c.n}
+            href={`#${c.anchor}`}
+            className="krain-check"
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 14,
+              background: palette.bgRaise,
+              padding: "18px 20px",
+              textDecoration: "none",
+              color: INK,
+            }}
+          >
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", color: ACCENT, minWidth: 22 }}>
+              {c.n}
+            </span>
+            <span style={{ fontSize: 14.5, lineHeight: 1.35, opacity: 0.9, flex: 1 }}>{c.label}</span>
+            <span
+              aria-hidden
+              className="krain-check-arrow"
+              style={{ fontFamily: MONO, fontSize: 14, color: ACCENT, opacity: 0.5, transition: "opacity .25s ease, transform .25s ease" }}
+            >
+              →
+            </span>
+          </a>
+        ))}
+      </nav>
+    </>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Review process flow — issued set to a resolved, site-ready package  */
+/* ------------------------------------------------------------------ */
+
+export function ReviewProcessFlow() {
+  const steps = [
+    "PDF / DWG set + register + schedules",
+    "Technical review",
+    "Marked-up drawings + action list",
+    "Project-team resolution",
+    "Issue / site use",
+  ];
+
+  return (
+    <div
+      role="img"
+      aria-label="A five-step flow: the PDF and DWG set with drawing register and schedules goes into a technical review, which produces marked-up drawings and an action list, leading to project-team resolution and finally issue or site use."
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "stretch",
+        gap: 0,
+        border: `1px solid ${RULE}`,
+        background: PLATE,
+      }}
+    >
+      {steps.map((s, i) => {
+        const last = i === steps.length - 1;
+        return (
+          <div
+            key={s}
+            style={{
+              flex: "1 1 150px",
+              padding: "24px 18px",
+              borderRight: i < steps.length - 1 ? `1px solid ${RULE}` : "none",
+              position: "relative",
+              background: last ? ACCENT_SOFT : "transparent",
+            }}
+          >
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", opacity: 0.5, marginBottom: 12 }}>
+              0{i + 1}
+            </div>
+            <div
+              style={{
+                fontFamily: MONO,
+                fontSize: 13,
+                lineHeight: 1.45,
+                letterSpacing: "0.02em",
+                color: last ? ACCENT : INK,
+                fontWeight: last ? 600 : 400,
+              }}
+            >
+              {s}
+            </div>
+            {i < steps.length - 1 && (
+              <span
+                aria-hidden
+                style={{
+                  position: "absolute",
+                  right: -8,
+                  top: "50%",
+                  transform: "translateY(-50%)",
+                  color: ACCENT,
+                  fontSize: 16,
+                  fontFamily: MONO,
+                  zIndex: 1,
+                }}
+              >
+                →
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+/* Common package risks — four buckets                                 */
+/* ------------------------------------------------------------------ */
+
+export function PackageRiskBuckets() {
+  const buckets = [
+    { t: "Missing information", d: "References, dimensions or notes that simply are not there." },
+    { t: "Conflicting drawings", d: "Plans, elevations, sections and details that disagree." },
+    { t: "Schedule mismatch", d: "Windows, doors and finishes that don’t tie back to the drawings." },
+    { t: "Buildability risk", d: "Details drawn neatly that cannot be built as shown." },
+  ];
+
+  return (
+    <>
+      <style>{`
+        .krain-risk-buckets { grid-template-columns: 1fr 1fr; }
+        @media (max-width: 560px) { .krain-risk-buckets { grid-template-columns: 1fr; } }
+      `}</style>
+      <div
+        role="img"
+        aria-label="Four common drawing-package risk categories: missing information, conflicting drawings, schedule mismatch and buildability risk."
+        className="krain-risk-buckets"
+        style={{ display: "grid", gap: 1, background: RULE, border: `1px solid ${RULE}` }}
+      >
+        {buckets.map((b, i) => (
+          <div
+            key={b.t}
+            style={{
+              background: palette.bgRaise,
+              padding: "24px 22px",
+              minHeight: 140,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.18em", color: ACCENT, marginBottom: 16 }}>
+              0{i + 1}
+            </div>
+            <div
+              style={{
+                fontFamily: "var(--font-geist), sans-serif",
+                fontSize: 18,
+                fontWeight: 400,
+                letterSpacing: "-0.01em",
+                marginBottom: 8,
+              }}
+            >
+              {b.t}
+            </div>
+            <div style={{ fontSize: 14, lineHeight: 1.5, opacity: 0.75 }}>{b.d}</div>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
