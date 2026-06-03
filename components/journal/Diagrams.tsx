@@ -4,6 +4,7 @@ const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 
 const INK = palette.ink;
 const ACCENT = palette.accent;
+const ACCENT_TEXT = palette.accentText;
 const RULE = "rgba(26, 29, 51, 0.16)";
 const PLATE = palette.plate;
 const ACCENT_SOFT = palette.accentSoft;
@@ -476,7 +477,7 @@ export function TenChecksList() {
               color: INK,
             }}
           >
-            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", color: ACCENT, minWidth: 22 }}>
+            <span style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.16em", color: ACCENT_TEXT, minWidth: 22 }}>
               {c.n}
             </span>
             <span style={{ fontSize: 14.5, lineHeight: 1.35, opacity: 0.9, flex: 1 }}>{c.label}</span>
@@ -518,6 +519,7 @@ export function ReviewProcessFlow() {
         gap: 0,
         border: `1px solid ${RULE}`,
         background: PLATE,
+        overflow: "hidden",
       }}
     >
       {steps.map((s, i) => {

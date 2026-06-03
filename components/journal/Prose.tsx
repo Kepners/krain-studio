@@ -14,7 +14,7 @@ export function Eyebrow({ children }: { children: ReactNode }) {
         fontSize: 11,
         letterSpacing: "0.22em",
         textTransform: "uppercase",
-        color: palette.accent,
+        color: palette.accentText,
         marginBottom: 24,
       }}
     >
@@ -119,11 +119,11 @@ export function A({ href, children }: { href: string; children: ReactNode }) {
     <a
       href={href}
       style={{
-        color: palette.accent,
+        color: palette.accentText,
         textDecoration: "underline",
         textUnderlineOffset: "0.18em",
         textDecorationThickness: "1px",
-        textDecorationColor: "rgba(255, 77, 110, 0.45)",
+        textDecorationColor: "rgba(179, 45, 70, 0.5)",
       }}
     >
       {children}

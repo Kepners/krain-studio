@@ -4,6 +4,7 @@ import { Header } from "@/components/home/Header";
 import { Footer } from "@/components/home/Footer";
 import { MagneticBtn } from "@/components/ui/MagneticBtn";
 import { palette } from "@/lib/tokens";
+import { channels } from "@/lib/contact";
 
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 const SANS = "var(--font-geist), sans-serif";
@@ -39,9 +40,17 @@ export default function ContactPage() {
         </p>
 
         <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", marginBottom: 56 }}>
-          <MagneticBtn primary href="mailto:matt@krain.studio">
-            matt@krain.studio →
-          </MagneticBtn>
+          {channels().map((c, i) => (
+            <MagneticBtn
+              key={c.key}
+              primary={i === 0}
+              href={c.href}
+              external={c.external}
+              ariaLabel={c.aria}
+            >
+              {i === 0 ? `${c.value} →` : c.label}
+            </MagneticBtn>
+          ))}
         </div>
 
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: palette.inkSoft, marginBottom: 18 }}>

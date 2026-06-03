@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { useReducedMotion } from "framer-motion";
 import { palette } from "@/lib/tokens";
 import { MagneticBtn } from "@/components/ui/MagneticBtn";
+import { channels } from "@/lib/contact";
 
 export function ContactBand() {
   const ref = useRef<HTMLElement>(null);
@@ -97,10 +98,18 @@ export function ContactBand() {
             flexWrap: "wrap",
           }}
         >
-          <MagneticBtn primary href="mailto:matt@krain.studio">
-            matt@krain.studio →
-          </MagneticBtn>
-          <MagneticBtn href="#">Start a brief</MagneticBtn>
+          {channels().map((c, i) => (
+            <MagneticBtn
+              key={c.key}
+              primary={i === 0}
+              href={c.href}
+              external={c.external}
+              ariaLabel={c.aria}
+            >
+              {i === 0 ? `${c.value} →` : c.label}
+            </MagneticBtn>
+          ))}
+          <MagneticBtn href="/contact">Start a brief</MagneticBtn>
         </div>
       </div>
     </section>

@@ -11,6 +11,8 @@ type Props = {
   className?: string;
   style?: CSSProperties;
   ariaLabel?: string;
+  /** off-site link — opens in a new tab with rel="noopener noreferrer" */
+  external?: boolean;
 };
 
 const SPRING = { stiffness: 220, damping: 18, mass: 0.6 };
@@ -22,6 +24,7 @@ export function MagneticBtn({
   className,
   style,
   ariaLabel,
+  external = false,
 }: Props) {
   const ref = useRef<HTMLAnchorElement>(null);
   const reduce = useReducedMotion();
@@ -48,6 +51,8 @@ export function MagneticBtn({
       ref={ref}
       href={href}
       aria-label={ariaLabel}
+      target={external ? "_blank" : undefined}
+      rel={external ? "noopener noreferrer" : undefined}
       onMouseMove={onMove}
       onMouseLeave={onLeave}
       className={className}

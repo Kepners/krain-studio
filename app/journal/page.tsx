@@ -5,6 +5,7 @@ import { ContactBand } from "@/components/home/ContactBand";
 import { Footer } from "@/components/home/Footer";
 import { PUBLISHED } from "@/components/journal/content";
 import { palette } from "@/lib/tokens";
+import { SITE, organization, blog } from "@/lib/schema";
 
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 const SANS = "var(--font-geist), sans-serif";
@@ -13,12 +14,57 @@ export const metadata: Metadata = {
   title: "Journal — Notes on technical drawing, detailing & coordination | Krain Studio",
   description:
     "Field notes and technical guides on construction-stage drawings, schedules, detailing and drawing coordination from Krain Studio.",
-  alternates: { canonical: "https://www.krain.studio/journal" },
+  alternates: { canonical: `${SITE}/journal` },
+  openGraph: {
+    title: "Journal — Krain Studio",
+    description:
+      "Field notes and technical guides on construction-stage drawings, schedules, detailing and drawing coordination.",
+    type: "website",
+    url: `${SITE}/journal`,
+    siteName: "Krain Studio",
+    images: [{ url: `${SITE}/krain/og-default.png`, width: 1200, height: 630, alt: "Krain Studio — Journal" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Journal — Krain Studio",
+    description:
+      "Field notes and technical guides on construction-stage drawings, schedules, detailing and drawing coordination.",
+    images: [`${SITE}/krain/og-default.png`],
+  },
 };
 
 export default function JournalIndexPage() {
+  const blogNode = {
+    ...blog,
+    blogPost: PUBLISHED.map((e) => ({
+      "@type": "BlogPosting",
+      "@id": `${SITE}/journal/${e.slug}#article`,
+      headline: e.title,
+      url: `${SITE}/journal/${e.slug}`,
+      datePublished: e.publishedISO ?? e.dateISO,
+    })),
+  };
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@graph": [
+      blogNode,
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Home", item: `${SITE}/` },
+          { "@type": "ListItem", position: 2, name: "Journal" },
+        ],
+      },
+      organization,
+    ],
+  };
+
   return (
     <main style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
       <Ticker />
       <Header />
 

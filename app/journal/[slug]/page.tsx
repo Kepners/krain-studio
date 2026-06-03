@@ -8,10 +8,10 @@ import { AnimLink } from "@/components/ui/AnimLink";
 import { POST_CONTENT, PUBLISHED } from "@/components/journal/content";
 import { getEntry } from "@/lib/journal";
 import { palette } from "@/lib/tokens";
+import { SITE, organization, blog } from "@/lib/schema";
 
 const MONO = "var(--font-geist-mono), ui-monospace, monospace";
 const SANS = "var(--font-geist), sans-serif";
-const SITE = "https://www.krain.studio";
 
 export function generateStaticParams() {
   return PUBLISHED.map((entry) => ({ slug: entry.slug }));
@@ -29,7 +29,8 @@ export async function generateMetadata({
   const url = `${SITE}/journal/${entry.slug}`;
   const published = entry.publishedISO ?? entry.dateISO;
   const modified = entry.modifiedISO ?? published;
-  const images = entry.ogImage ? [entry.ogImage] : undefined;
+  const ogPath = entry.ogImage ?? "/krain/og-default.png";
+  const images = [{ url: `${SITE}${ogPath}`, width: 1200, height: 630, alt: entry.title }];
 
   return {
     title: entry.metaTitle,
@@ -44,13 +45,16 @@ export async function generateMetadata({
       siteName: "Krain Studio",
       publishedTime: published,
       modifiedTime: modified,
+      authors: [`${SITE}/about`],
+      section: entry.kind,
+      tags: entry.keywords,
       images,
     },
     twitter: {
       card: "summary_large_image",
       title: entry.metaTitle,
       description: entry.description,
-      images,
+      images: [`${SITE}${ogPath}`],
     },
   };
 }
@@ -70,24 +74,7 @@ export default async function JournalPostPage({
   const published = entry.publishedISO ?? entry.dateISO;
   const modified = entry.modifiedISO ?? published;
 
-  const organization = {
-    "@type": "ProfessionalService",
-    "@id": `${SITE}/#organization`,
-    name: "Krain Studio",
-    url: SITE,
-    email: "matt@krain.studio",
-    description:
-      "Freelance architectural technology — technical CAD production, construction detailing and drawing review for architects, developers, contractors and private clients.",
-    areaServed: "United Kingdom",
-    address: {
-      "@type": "PostalAddress",
-      addressLocality: "Biggleswade",
-      addressRegion: "Bedfordshire",
-      addressCountry: "GB",
-    },
-    logo: { "@type": "ImageObject", url: `${SITE}/krain/logo-wordmark.png` },
-    image: `${SITE}/krain/logo-wordmark.png`,
-  };
+  const ogImage = `${SITE}${entry.ogImage ?? "/krain/og-default.png"}`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -99,19 +86,20 @@ export default async function JournalPostPage({
         description: entry.description,
         datePublished: published,
         dateModified: modified,
-        ...(entry.ogImage ? { image: `${SITE}${entry.ogImage}` } : {}),
+        image: { "@type": "ImageObject", url: ogImage, width: 1200, height: 630 },
         inLanguage: "en-GB",
+        articleSection: entry.kind,
         keywords: entry.keywords.join(", "),
         author: {
           "@type": "Person",
           name: "Matt",
           jobTitle: "Architectural Technologist",
           url: `${SITE}/about`,
-          worksFor: { "@id": `${SITE}/#organization` },
+          worksFor: { "@id": organization["@id"] },
         },
-        publisher: { "@id": `${SITE}/#organization` },
+        publisher: { "@id": organization["@id"] },
         mainEntityOfPage: { "@type": "WebPage", "@id": url },
-        isPartOf: { "@id": `${url}#breadcrumb` },
+        isPartOf: { "@id": blog["@id"] },
         url,
       },
       {
@@ -123,6 +111,7 @@ export default async function JournalPostPage({
           { "@type": "ListItem", position: 3, name: entry.title },
         ],
       },
+      blog,
       organization,
     ],
   };
@@ -160,21 +149,19 @@ export default async function JournalPostPage({
             alignItems: "center",
           }}
         >
-          <AnimLink href="/" color={palette.accent}>
+          <AnimLink href="/" color={palette.accentText}>
             Home
           </AnimLink>
           <span aria-hidden style={{ opacity: 0.4 }}>
             /
           </span>
-          <AnimLink href="/journal" color={palette.accent}>
+          <AnimLink href="/journal" color={palette.accentText}>
             Journal
           </AnimLink>
           <span aria-hidden style={{ opacity: 0.4 }}>
             /
           </span>
-          <span aria-current="page" style={{ opacity: 0.55 }}>
-            {entry.title}
-          </span>
+          <span aria-current="page">{entry.title}</span>
         </nav>
 
         <div
@@ -215,7 +202,15 @@ export default async function JournalPostPage({
           }}
         >
           By{" "}
-          <a href="/about" style={{ color: palette.accent, textDecoration: "none" }}>
+          <a
+            href="/about"
+            style={{
+              color: palette.accentText,
+              textDecoration: "underline",
+              textUnderlineOffset: "0.18em",
+              textDecorationColor: "rgba(179, 45, 70, 0.5)",
+            }}
+          >
             Matt
           </a>{" "}
           · Krain Studio

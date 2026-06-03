@@ -1,4 +1,4 @@
-import { Lead, P, H2, Bullets, Quote, Figure } from "@/components/journal/Prose";
+import { Lead, P, H2, Bullets, Quote, A, Figure } from "@/components/journal/Prose";
 import {
   HeroScheduleDiagram,
   CoordinationTriangle,
@@ -30,9 +30,9 @@ export function WhyWindowDoorSchedulesGoWrong() {
       </Figure>
 
       <P>
-        At Krain Studio, window and door schedule review is one of the areas where technical drawing
-        checks can add real value. The errors are often small, but they can travel a long way through
-        the project if nobody catches them early.
+        At Krain Studio, <A href="/services#review">window and door schedule review</A> is one of the
+        areas where technical drawing checks can add real value. The errors are often small, but they can
+        travel a long way through the project if nobody catches them early.
       </P>
       <P>
         This article explains why window and door schedules go wrong and what should be checked before
@@ -392,9 +392,10 @@ export function WhyWindowDoorSchedulesGoWrong() {
 
       <P>The schedule needs to be checked against the whole drawing package.</P>
       <P>
-        At Krain Studio, I review window and door information as part of wider technical drawing audits.
-        The aim is to identify missing references, conflicting information, unclear notes, schedule gaps
-        and buildability risks before issue, procurement or site use.
+        At Krain Studio, I review window and door information as part of{" "}
+        <A href="/journal/what-i-check-before-drawings-go-to-site">wider technical drawing audits</A>. The
+        aim is to identify missing references, conflicting information, unclear notes, schedule gaps and
+        buildability risks before issue, procurement or site use.
       </P>
     </>
   );

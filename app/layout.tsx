@@ -39,12 +39,14 @@ export const metadata: Metadata = {
     type: "website",
     url: "https://www.krain.studio",
     siteName: "Krain Studio",
+    images: [{ url: "/krain/og-default.png", width: 1200, height: 630, alt: "Krain Studio — Detailed construction design" }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Krain Studio — Detailed construction design",
     description:
       "RIBA Stage 4–5 construction packages. Drawings that turn permission into a buildable thing.",
+    images: ["/krain/og-default.png"],
   },
 };
 
