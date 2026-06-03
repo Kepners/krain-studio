@@ -14,8 +14,8 @@ const PROJECTS: WorkItem[] = [
   { name: "Carraway Residence", scope: "Auditorium ceiling details", code: "DT-08", img: "/krain/work-06.png" },
   { name: "Carraway Residence", scope: "Operable partition details", code: "DT-09", img: "/krain/work-07.png" },
   { name: "Carraway Tower", scope: "Pool & ceiling details", code: "DT-10", img: "/krain/work-08.png" },
-  { name: "Selwyn House", scope: "Window details & section", code: "DT-11", img: "/krain/work-09.png" },
-  { name: "Hendell Place", scope: "Window head/cill & section", code: "DT-12", img: "/krain/work-10.png" },
+  { name: "Selwyn House", scope: "Sectional detail · 1:20", code: "DT-11", img: "/krain/work-09.png" },
+  { name: "Hendell Place", scope: "Sectional detail · 1:20", code: "DT-12", img: "/krain/work-10.png" },
 ];
 
 function WorkCard({ p }: { p: WorkItem }) {
