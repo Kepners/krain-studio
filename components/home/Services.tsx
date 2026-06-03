@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { palette } from "@/lib/tokens";
+import { AnimLink } from "@/components/ui/AnimLink";
 
 const SERVICES: Array<[string, string, string]> = [
-  ["A", "Construction package", "RIBA 4–5 · tender / building-control set"],
-  ["B", "1:5 / 1:10 details", "Junctions · thresholds · cills · eaves"],
-  ["C", "Specifications", "Self-written · NHBC / LBC"],
-  ["D", "Building Control", "Part L · Part B · Approved Inspector"],
-  ["E", "Site / RFI", "Live queries · same-day response"],
-  ["F", "Peer review", "Pre-tender check on another set"],
+  ["A", "Technical CAD production", "AutoCAD 2D · working drawings"],
+  ["B", "Construction details", "1:5 / 1:10 junctions · thresholds · eaves"],
+  ["C", "Stage 4 / 5 documentation", "Technical design · construction info"],
+  ["D", "Building Control support", "Part L · Part B · NHBC / LBC drawings"],
+  ["E", "Drawing review & audit", "Package audits · coordination · buildability"],
+  ["F", "Site & query support", "RFIs · mark-ups · action lists"],
 ];
 
 function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: number }) {
@@ -108,17 +109,55 @@ function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: numbe
 export function Services() {
   return (
     <section id="services" style={{ padding: "120px 32px" }}>
-      <h2
+      <div
         style={{
-          fontFamily: "var(--font-geist), sans-serif",
-          fontWeight: 200,
-          fontSize: "clamp(40px, 7vw, 64px)",
-          margin: "0 0 48px",
-          letterSpacing: "-0.04em",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-end",
+          gap: 24,
+          flexWrap: "wrap",
+          marginBottom: 48,
         }}
       >
-        Services
-      </h2>
+        <div>
+          <h2
+            style={{
+              fontFamily: "var(--font-geist), sans-serif",
+              fontWeight: 200,
+              fontSize: "clamp(40px, 7vw, 64px)",
+              margin: 0,
+              letterSpacing: "-0.04em",
+            }}
+          >
+            Services
+          </h2>
+          <p
+            style={{
+              fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+              fontSize: 12,
+              letterSpacing: "0.08em",
+              textTransform: "uppercase",
+              color: palette.inkSoft,
+              margin: "14px 0 0",
+              maxWidth: 540,
+            }}
+          >
+            Freelance architectural technology — drawings, audits, site-issue resolution.
+          </p>
+        </div>
+        <AnimLink
+          href="/services"
+          color={palette.accent}
+          style={{
+            fontSize: 12,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          }}
+        >
+          Full services →
+        </AnimLink>
+      </div>
       <div
         className="krain-services-grid"
         style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 14 }}

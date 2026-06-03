@@ -113,7 +113,7 @@ export function Hero() {
               fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             }}
           >
-            <FadeIn as="span">Detailed construction design / 2018 →</FadeIn>
+            <FadeIn as="span">Freelance architectural technology · 20+ years</FadeIn>
           </div>
           <h1
             className="krain-hero-h1"
@@ -164,9 +164,9 @@ export function Hero() {
                 marginTop: 56,
               }}
             >
-              Krain is a small office that produces RIBA Stage 4–5 packages — the
-              construction-stage drawings, details, and specs that turn a planning
-              permission into a buildable thing.
+              Freelance technical CAD production, drawing review and construction
+              support — for architects, developers, contractors and private clients.
+              Clearer drawings, fewer surprises on site.
             </p>
           </FadeIn>
         </div>

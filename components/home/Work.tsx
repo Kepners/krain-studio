@@ -173,6 +173,23 @@ export function Work() {
         </div>
       </div>
 
+      <p
+        style={{
+          fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+          fontSize: 12,
+          lineHeight: 1.6,
+          letterSpacing: "0.02em",
+          color: palette.inkSoft,
+          opacity: 0.85,
+          maxWidth: 660,
+          margin: "44px 0 0",
+          padding: "0 32px",
+        }}
+      >
+        Examples are anonymised or representative — live client names, project
+        locations, title blocks and original drawings are not published.
+      </p>
+
       <style>{`
         .krain-marquee-track {
           animation: krain-marquee 55s linear infinite;
