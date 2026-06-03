@@ -1,128 +1,92 @@
-"use client";
-
 import Image from "next/image";
 import { palette } from "@/lib/tokens";
-import { AnimLink } from "@/components/ui/AnimLink";
 
-type WorkItem = {
-  name: string;
-  year: string;
-  loc: string;
-  sheet: string;
-  label: string;
-  img: string;
-};
+type WorkItem = { name: string; scope: string; code: string; img: string };
 
+// Anonymised, representative samples — cropped from real drawings with all
+// title blocks, project names, locations and photos removed (see sync notes).
 const PROJECTS: WorkItem[] = [
-  {
-    name: "Maple Court",
-    year: "2026",
-    loc: "London",
-    sheet: "WIN-04",
-    label: "window elevations · maple court",
-    img: "/krain/work-audit.png",
-  },
-  {
-    name: "Eastgate Mews",
-    year: "2025",
-    loc: "Hillingdon",
-    sheet: "DET-12",
-    label: "details · eastgate mews",
-    img: "/krain/work-section.png",
-  },
-  {
-    name: "Parkside House Types",
-    year: "2025",
-    loc: "Home Counties",
-    sheet: "WD-07",
-    label: "working drawings · parkside",
-    img: "/krain/hero.png",
-  },
-  {
-    name: "Meadowbrook Phase 4",
-    year: "2025",
-    loc: "Milton Keynes",
-    sheet: "GA-147",
-    label: "setting out · plot 147",
-    img: "/krain/work-audit.png",
-  },
-  {
-    name: "Rowan Drive",
-    year: "2026",
-    loc: "St Albans",
-    sheet: "PD-16",
-    label: "planning · rowan drive",
-    img: "/krain/work-section.png",
-  },
+  { name: "Maple Court", scope: "Residential GA plans", code: "GA-02", img: "/krain/work-01.png" },
+  { name: "Eastgate House", scope: "Site plan & elevations", code: "PL-03", img: "/krain/work-02.png" },
+  { name: "Old Mill Yard", scope: "Planning & elevations", code: "PL-04", img: "/krain/work-03.png" },
+  { name: "Carraway Residence", scope: "Ceiling & lighting details", code: "DT-06", img: "/krain/work-04.png" },
+  { name: "Carraway Residence", scope: "Stair sections & details", code: "DT-07", img: "/krain/work-05.png" },
+  { name: "Carraway Residence", scope: "Auditorium ceiling details", code: "DT-08", img: "/krain/work-06.png" },
+  { name: "Carraway Residence", scope: "Operable partition details", code: "DT-09", img: "/krain/work-07.png" },
+  { name: "Carraway Tower", scope: "Pool & ceiling details", code: "DT-10", img: "/krain/work-08.png" },
+  { name: "Selwyn House", scope: "Window details & section", code: "DT-11", img: "/krain/work-09.png" },
+  { name: "Hendell Place", scope: "Window head/cill & section", code: "DT-12", img: "/krain/work-10.png" },
 ];
 
 function WorkCard({ p }: { p: WorkItem }) {
   return (
-    <a href="#" className="krain-work-card" style={{ flex: "0 0 auto", width: 440, maxWidth: "82vw", textDecoration: "none", color: palette.ink }}>
+    <a href="#" className="krain-job" style={{ textDecoration: "none", color: palette.ink }}>
       <div
+        className="krain-job-plate"
         style={{
           position: "relative",
           width: "100%",
-          aspectRatio: "4/3",
+          aspectRatio: "3/2",
           borderRadius: 8,
           overflow: "hidden",
           background: palette.bg,
-          boxShadow: `0 30px 80px rgba(26,29,51,.18), 0 0 0 1px ${palette.rule}`,
+          boxShadow: `0 18px 50px rgba(26,29,51,.12), 0 0 0 1px ${palette.rule}`,
         }}
       >
         <Image
           src={p.img}
-          alt={`Technical drawing — ${p.name}`}
+          alt={`${p.scope} — anonymised drawing sample, Krain Studio`}
           fill
-          sizes="440px"
+          sizes="(max-width: 700px) 100vw, (max-width: 1100px) 50vw, 33vw"
+          className="krain-job-img"
           style={{ objectFit: "cover", mixBlendMode: "multiply" }}
         />
         <span
           style={{
             position: "absolute",
-            top: 14,
-            left: 14,
+            top: 12,
+            left: 12,
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             fontSize: 10,
-            letterSpacing: "0.18em",
+            letterSpacing: "0.16em",
             textTransform: "uppercase",
             color: palette.inkSoft,
             opacity: 0.75,
           }}
         >
-          [ {p.label} ]
+          [ {p.scope} ]
         </span>
         <span
           style={{
             position: "absolute",
-            bottom: 14,
-            right: 14,
+            bottom: 12,
+            right: 12,
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             fontSize: 10,
-            letterSpacing: "0.18em",
+            letterSpacing: "0.16em",
             textTransform: "uppercase",
             color: palette.inkSoft,
             opacity: 0.5,
           }}
         >
-          {p.sheet}
+          {p.code}
         </span>
       </div>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 16, gap: 16 }}>
-        <span style={{ fontFamily: "var(--font-geist), sans-serif", fontSize: 20, fontWeight: 300, letterSpacing: "-0.01em" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginTop: 14, gap: 12 }}>
+        <span style={{ fontFamily: "var(--font-geist), sans-serif", fontSize: 19, fontWeight: 300, letterSpacing: "-0.01em" }}>
           {p.name}
         </span>
         <span
           style={{
-            fontSize: 11,
-            opacity: 0.55,
-            letterSpacing: "0.1em",
+            fontSize: 10.5,
+            opacity: 0.5,
+            letterSpacing: "0.12em",
             fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             textTransform: "uppercase",
             whiteSpace: "nowrap",
           }}
         >
-          {p.year} · {p.loc.toUpperCase()}
+          Tender · Construction
         </span>
       </div>
     </a>
@@ -130,47 +94,39 @@ function WorkCard({ p }: { p: WorkItem }) {
 }
 
 export function Work() {
-  const loop = [...PROJECTS, ...PROJECTS];
-
   return (
-    <section id="work" style={{ position: "relative", zIndex: 2, padding: "120px 0" }}>
+    <section id="work" style={{ position: "relative", zIndex: 2, padding: "120px 32px" }}>
       <div
         style={{
           display: "flex",
           justifyContent: "space-between",
-          alignItems: "baseline",
-          marginBottom: 48,
-          gap: 16,
+          alignItems: "flex-end",
+          gap: 24,
           flexWrap: "wrap",
-          padding: "0 32px",
+          marginBottom: 48,
         }}
       >
         <h2 style={{ fontFamily: "var(--font-geist), sans-serif", fontWeight: 200, fontSize: "clamp(40px, 7vw, 64px)", margin: 0, letterSpacing: "-0.04em" }}>
           Selected work
         </h2>
-        <AnimLink
-          href="#"
-          color={palette.accent}
-          style={{ fontSize: 12, letterSpacing: "0.16em", textTransform: "uppercase", fontFamily: "var(--font-geist-mono), ui-monospace, monospace" }}
+        <span
+          style={{
+            fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
+            fontSize: 11,
+            letterSpacing: "0.16em",
+            textTransform: "uppercase",
+            color: palette.inkSoft,
+            opacity: 0.7,
+          }}
         >
-          All projects →
-        </AnimLink>
+          Anonymised · representative samples
+        </span>
       </div>
 
-      <div
-        className="krain-marquee"
-        aria-label="Selected work — scrolling gallery"
-        style={{
-          overflow: "hidden",
-          WebkitMaskImage: "linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)",
-          maskImage: "linear-gradient(90deg, transparent, #000 7%, #000 93%, transparent)",
-        }}
-      >
-        <div className="krain-marquee-track" style={{ display: "flex", gap: 28, width: "max-content" }}>
-          {loop.map((p, i) => (
-            <WorkCard key={i} p={p} />
-          ))}
-        </div>
+      <div className="krain-job-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "44px 28px" }}>
+        {PROJECTS.map((p, i) => (
+          <WorkCard key={i} p={p} />
+        ))}
       </div>
 
       <p
@@ -181,9 +137,8 @@ export function Work() {
           letterSpacing: "0.02em",
           color: palette.inkSoft,
           opacity: 0.85,
-          maxWidth: 660,
-          margin: "44px 0 0",
-          padding: "0 32px",
+          maxWidth: 680,
+          margin: "48px 0 0",
         }}
       >
         Examples are anonymised or representative — live client names, project
@@ -191,26 +146,10 @@ export function Work() {
       </p>
 
       <style>{`
-        .krain-marquee-track {
-          animation: krain-marquee 55s linear infinite;
-        }
-        .krain-marquee:hover .krain-marquee-track {
-          animation-play-state: paused;
-        }
-        .krain-work-card { transition: opacity .35s ease; }
-        .krain-marquee:hover .krain-work-card { opacity: 0.5; }
-        .krain-marquee .krain-work-card:hover { opacity: 1; }
-        @keyframes krain-marquee {
-          from { transform: translateX(0); }
-          to { transform: translateX(-50%); }
-        }
-        @media (max-width: 700px) {
-          .krain-marquee-track { animation-duration: 40s; }
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .krain-marquee { overflow-x: auto; }
-          .krain-marquee-track { animation: none; }
-        }
+        .krain-job-img { transition: transform .6s cubic-bezier(.2,.7,.2,1); }
+        .krain-job:hover .krain-job-img { transform: scale(1.04); }
+        .krain-job-plate { transition: box-shadow .4s; }
+        .krain-job:hover .krain-job-plate { box-shadow: 0 28px 70px rgba(26,29,51,.2), 0 0 0 1px ${palette.accent}88; }
       `}</style>
     </section>
   );
