@@ -5,9 +5,10 @@ type HeroPlateProps = {
   /** When set, renders the real drawing/photo. Falls back to the placeholder when omitted. */
   src?: string;
   alt?: string;
+  label?: string;
 };
 
-export function HeroPlate({ src, alt }: HeroPlateProps) {
+export function HeroPlate({ src, alt, label }: HeroPlateProps) {
   if (src) {
     const ticks = [
       { top: 14, left: 14 },
@@ -51,7 +52,7 @@ export function HeroPlate({ src, alt }: HeroPlateProps) {
           }}
         >
           <span style={{ position: "absolute", top: 16, left: 16, opacity: 0.75 }}>
-            [ Roof eaves · 1:5 ]
+            [ {label ?? "Detail · 1:5"} ]
           </span>
           <span style={{ position: "absolute", bottom: 16, left: 16, opacity: 0.75 }}>
             Drawn at 1:5
