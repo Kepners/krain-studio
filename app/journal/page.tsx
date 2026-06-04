@@ -3,6 +3,7 @@ import { Ticker } from "@/components/home/Ticker";
 import { Header } from "@/components/home/Header";
 import { ContactBand } from "@/components/home/ContactBand";
 import { Footer } from "@/components/home/Footer";
+import { Journal } from "@/components/home/Journal";
 import { PUBLISHED } from "@/components/journal/content";
 import { palette } from "@/lib/tokens";
 import { SITE, organization, blog } from "@/lib/schema";
@@ -107,69 +108,7 @@ export default function JournalIndexPage() {
         </p>
       </div>
 
-      <div
-        style={{
-          position: "relative",
-          zIndex: 2,
-          padding: "32px 32px 96px",
-          maxWidth: 1100,
-          margin: "0 auto",
-        }}
-      >
-        {PUBLISHED.map((entry) => (
-          <a
-            key={entry.slug}
-            href={`/journal/${entry.slug}`}
-            style={{
-              display: "block",
-              textDecoration: "none",
-              color: palette.ink,
-              borderTop: `1px solid ${palette.rule}`,
-              padding: "32px 0",
-            }}
-          >
-            <div
-              style={{
-                fontFamily: MONO,
-                fontSize: 11,
-                letterSpacing: "0.16em",
-                textTransform: "uppercase",
-                opacity: 0.55,
-                marginBottom: 16,
-              }}
-            >
-              {entry.date} · {entry.kind} · {entry.readingTime}
-            </div>
-            <div
-              style={{
-                fontFamily: SANS,
-                fontSize: "clamp(26px, 4vw, 38px)",
-                fontWeight: 300,
-                letterSpacing: "-0.02em",
-                lineHeight: 1.12,
-                marginBottom: 16,
-                maxWidth: 860,
-              }}
-            >
-              {entry.title}
-            </div>
-            <p style={{ fontSize: 16, lineHeight: 1.6, opacity: 0.78, maxWidth: 680, margin: "0 0 18px" }}>
-              {entry.excerpt}
-            </p>
-            <span
-              style={{
-                fontFamily: MONO,
-                fontSize: 12,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: palette.accent,
-              }}
-            >
-              Read →
-            </span>
-          </a>
-        ))}
-      </div>
+      <Journal embedded entries={PUBLISHED} />
 
       <ContactBand />
       <Footer />

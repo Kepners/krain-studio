@@ -10,7 +10,7 @@ const LOGO_HEIGHT = 52;
 const NAV = [
   { label: "Work", href: "/work" },
   { label: "Services", href: "/services" },
-  { label: "Journal", href: "/#journal" },
+  { label: "Journal", href: "/journal" },
   { label: "About", href: "/about" },
   { label: "Contact", href: "/contact" },
 ];

@@ -138,9 +138,102 @@ function CompactCard({ entry }: { entry: JournalEntry }) {
   );
 }
 
-export function Journal({ entries }: { entries: JournalEntry[] }) {
+// Uniform card (meta + title + excerpt + Read) for the dedicated /journal index
+// grid — mirrors how the /work page lays out project cards.
+function GridCard({ entry }: { entry: JournalEntry }) {
+  const [hover, setHover] = useState(false);
+  return (
+    <a
+      href={`/journal/${entry.slug}`}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        textDecoration: "none",
+        color: palette.ink,
+        borderTop: `1px solid ${hover ? palette.accent : palette.rule}`,
+        paddingTop: 22,
+        height: "100%",
+        transition: "border-color .35s",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: MONO,
+          fontSize: 11,
+          letterSpacing: "0.16em",
+          textTransform: "uppercase",
+          opacity: 0.55,
+        }}
+      >
+        {entry.date} · {entry.kind} · {entry.readingTime}
+      </div>
+      <div
+        style={{
+          fontFamily: SANS,
+          fontSize: 25,
+          lineHeight: 1.18,
+          marginTop: 14,
+          fontWeight: 300,
+          letterSpacing: "-0.015em",
+          transform: hover ? "translateX(6px)" : "translateX(0)",
+          transition: "transform .45s cubic-bezier(.2,.7,.2,1)",
+        }}
+      >
+        {entry.title}
+      </div>
+      <p style={{ fontSize: 15, lineHeight: 1.6, opacity: 0.75, marginTop: 14, flex: 1 }}>
+        {entry.excerpt}
+      </p>
+      <div
+        style={{
+          fontFamily: MONO,
+          fontSize: 12,
+          marginTop: 20,
+          color: palette.accent,
+          letterSpacing: "0.1em",
+          textTransform: "uppercase",
+          opacity: hover ? 1 : 0.7,
+          transition: "opacity .35s",
+        }}
+      >
+        Read →
+      </div>
+    </a>
+  );
+}
+
+export function Journal({
+  entries,
+  embedded = false,
+}: {
+  entries: JournalEntry[];
+  embedded?: boolean;
+}) {
   const [featured, ...rest] = entries;
   if (!featured) return null;
+
+  // Dedicated /journal index: uniform card grid under the page's own heading.
+  if (embedded) {
+    return (
+      <section style={{ position: "relative", zIndex: 2, padding: "0 32px 48px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(min(320px, 100%), 1fr))",
+            gap: "44px 28px",
+            maxWidth: 1100,
+            margin: "0 auto",
+          }}
+        >
+          {entries.map((entry) => (
+            <GridCard key={entry.slug} entry={entry} />
+          ))}
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="journal" style={{ padding: "60px 32px 120px" }}>
