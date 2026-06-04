@@ -3,9 +3,11 @@ import { JOURNAL, type JournalEntry } from "@/lib/journal";
 import { WhyWindowDoorSchedulesGoWrong } from "@/components/journal/posts/why-window-and-door-schedules-go-wrong";
 import { WhatICheckBeforeDrawingsGoToSite } from "@/components/journal/posts/what-i-check-before-drawings-go-to-site";
 import { HowToReviewArchitectDrawingRegister } from "@/components/journal/posts/how-to-review-architect-drawing-register";
+import { Stage4VsStage5Drawings } from "@/components/journal/posts/stage-4-vs-stage-5-drawings";
 
 /** Maps a journal slug to its article body component. Add an entry here when a post is ready to publish. */
 export const POST_CONTENT: Record<string, () => ReactNode> = {
+  "stage-4-vs-stage-5-drawings": Stage4VsStage5Drawings,
   "how-to-review-architect-drawing-register": HowToReviewArchitectDrawingRegister,
   "what-i-check-before-drawings-go-to-site": WhatICheckBeforeDrawingsGoToSite,
   "why-window-and-door-schedules-go-wrong": WhyWindowDoorSchedulesGoWrong,

@@ -29,6 +29,34 @@ export type JournalEntry = {
 
 export const JOURNAL: JournalEntry[] = [
   {
+    slug: "stage-4-vs-stage-5-drawings",
+    title: "Stage 4 vs Stage 5 drawings: what actually changes?",
+    date: "Jun 2026",
+    dateISO: "2026-06-04",
+    publishedISO: "2026-06-04T10:00:00+01:00",
+    modifiedISO: "2026-06-04T10:00:00+01:00",
+    kind: "Technical guide",
+    readingTime: "14 min read",
+    excerpt:
+      "Stage 4 and Stage 5 are often described as separate project stages, but real projects are rarely that neat. This guide explains what changes when technical design information starts being used for manufacturing, procurement, construction and site queries.",
+    metaTitle: "Stage 4 vs Stage 5 Drawings: What Actually Changes? | Krain Studio",
+    description:
+      "A practical guide to the difference between Stage 4 technical design drawings and Stage 5 construction information, including drawing registers, schedules, details, buildability and site-query risk.",
+    keywords: [
+      "RIBA Stage 4",
+      "RIBA Stage 5",
+      "technical design drawings",
+      "construction information",
+      "drawing register",
+      "window and door schedules",
+      "buildability review",
+      "drawing coordination",
+      "construction drawings",
+      "architectural technologist",
+    ],
+    ogImage: "/krain/journal/stage-4-vs-stage-5-drawings-og.png",
+  },
+  {
     slug: "how-to-review-architect-drawing-register",
     title: "How to review an architect's drawing register",
     date: "Jun 2026",
