@@ -13,8 +13,14 @@ export function Hero() {
   const [mouse, setMouse] = useState({ x: 0.5, y: 0.5 });
 
   const { scrollY } = useScroll();
-  const slashScrollY = useSpring(useTransform(scrollY, [0, 1000], [0, -150]), { stiffness: 80, damping: 20 });
-  const glowScrollY = useSpring(useTransform(scrollY, [0, 1000], [0, -120]), { stiffness: 80, damping: 20 });
+  const slashScrollY = useSpring(useTransform(scrollY, [0, 1000], [0, -150]), {
+    stiffness: 80,
+    damping: 20,
+  });
+  const glowScrollY = useSpring(useTransform(scrollY, [0, 1000], [0, -120]), {
+    stiffness: 80,
+    damping: 20,
+  });
 
   useEffect(() => {
     if (reduce) return;
@@ -22,7 +28,10 @@ export function Hero() {
     if (!el) return;
     const onMove = (e: MouseEvent) => {
       const r = el.getBoundingClientRect();
-      setMouse({ x: (e.clientX - r.left) / r.width, y: (e.clientY - r.top) / r.height });
+      setMouse({
+        x: (e.clientX - r.left) / r.width,
+        y: (e.clientY - r.top) / r.height,
+      });
     };
     el.addEventListener("mousemove", onMove);
     return () => el.removeEventListener("mousemove", onMove);
@@ -34,7 +43,14 @@ export function Hero() {
   const glowY = (mouse.y - 0.5) * 60;
 
   return (
-    <section ref={sectionRef} style={{ position: "relative", padding: "112px 32px 132px", overflow: "hidden" }}>
+    <section
+      ref={sectionRef}
+      style={{
+        position: "relative",
+        padding: "120px 32px 140px",
+        overflow: "hidden",
+      }}
+    >
       {/* coral slash */}
       <motion.div
         aria-hidden
@@ -78,7 +94,13 @@ export function Hero() {
 
       <div
         className="krain-hero-grid"
-        style={{ position: "relative", display: "grid", gridTemplateColumns: "1.1fr 1fr", gap: 64, alignItems: "center" }}
+        style={{
+          position: "relative",
+          display: "grid",
+          gridTemplateColumns: "1.1fr 1fr",
+          gap: 64,
+          alignItems: "center",
+        }}
       >
         <div>
           <div
@@ -87,55 +109,64 @@ export function Hero() {
               letterSpacing: "0.22em",
               textTransform: "uppercase",
               color: palette.inkSoft,
-              marginBottom: 28,
+              marginBottom: 36,
               fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
             }}
           >
-            <FadeIn as="span">Technical CAD · Drawing review · Construction support</FadeIn>
+            <FadeIn as="span">Freelance architectural technology · 20+ years</FadeIn>
           </div>
-
-          <FadeIn>
-            <h1
-              className="krain-hero-h1"
-              style={{
-                fontFamily: "var(--font-geist), sans-serif",
-                fontWeight: 200,
-                fontSize: "clamp(32px, 4.6vw, 58px)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.035em",
-                margin: 0,
-              }}
-            >
-              Freelance architectural technology support for{" "}
-              <span style={{ color: palette.accent, fontWeight: 300 }}>clear, buildable drawings.</span>
-            </h1>
-          </FadeIn>
-
-          <FadeIn delay={180}>
-            <p style={{ fontSize: 17, lineHeight: 1.55, opacity: 0.85, maxWidth: 560, marginTop: 34 }}>
-              Krain Studio provides technical CAD production, construction detailing, drawing review and
-              construction support for architectural practices, developers, contractors and private clients.
-            </p>
-          </FadeIn>
-          <FadeIn delay={300}>
-            <p style={{ fontSize: 16, lineHeight: 1.55, opacity: 0.7, maxWidth: 560, marginTop: 16 }}>
-              I help project teams turn design intent into coordinated, buildable information — with clearer
-              drawings, fewer coordination gaps and fewer surprises on site.
-            </p>
-          </FadeIn>
+          <h1
+            className="krain-hero-h1"
+            style={{
+              fontFamily: "var(--font-geist), sans-serif",
+              fontWeight: 200,
+              fontSize: "clamp(56px, 11vw, 128px)",
+              lineHeight: 0.92,
+              letterSpacing: "-0.045em",
+              margin: 0,
+            }}
+          >
+            <FadeIn>
+              <span>
+                Drawn at{" "}
+                <span style={{ color: palette.accent, fontWeight: 300, position: "relative" }}>
+                  1:5
+                  <span
+                    aria-hidden
+                    className="krain-flicker"
+                    style={{
+                      position: "absolute",
+                      inset: 0,
+                      color: palette.accent,
+                      filter: "blur(20px)",
+                    }}
+                  >
+                    1:5
+                  </span>
+                </span>
+                .
+              </span>
+            </FadeIn>
+            <FadeIn delay={120}>
+              <span>Built without</span>
+            </FadeIn>
+            <FadeIn delay={240}>
+              <span>surprises.</span>
+            </FadeIn>
+          </h1>
           <FadeIn delay={420}>
             <p
               style={{
-                fontFamily: "var(--font-geist-mono), ui-monospace, monospace",
-                fontSize: 11,
-                letterSpacing: "0.08em",
-                textTransform: "uppercase",
-                color: palette.inkSoft,
-                marginTop: 32,
-                lineHeight: 1.7,
+                fontSize: 17,
+                lineHeight: 1.55,
+                opacity: 0.82,
+                maxWidth: 520,
+                marginTop: 56,
               }}
             >
-              20+ years’ experience · AutoCAD 2D · Stage 4/5 technical information · Drawing audits · Construction details
+              Freelance technical CAD production, drawing review and construction
+              support — for architects, developers, contractors and private clients.
+              Clearer drawings, fewer surprises on site.
             </p>
           </FadeIn>
         </div>
@@ -155,10 +186,10 @@ export function Hero() {
         @media (max-width: 900px) {
           .krain-hero-grid {
             grid-template-columns: 1fr !important;
-            gap: 44px !important;
+            gap: 48px !important;
           }
           .krain-hero-h1 {
-            font-size: clamp(28px, 8vw, 42px) !important;
+            font-size: clamp(48px, 14vw, 64px) !important;
           }
         }
       `}</style>
