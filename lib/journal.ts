@@ -29,6 +29,34 @@ export type JournalEntry = {
 
 export const JOURNAL: JournalEntry[] = [
   {
+    slug: "how-to-review-architect-drawing-register",
+    title: "How to review an architect's drawing register",
+    date: "Jun 2026",
+    dateISO: "2026-06-04",
+    publishedISO: "2026-06-04T09:00:00+01:00",
+    modifiedISO: "2026-06-04T09:00:00+01:00",
+    kind: "Technical guide",
+    readingTime: "13 min read",
+    excerpt:
+      "A drawing register should tell the project team exactly what drawings exist, what revision they are at and what information can be relied on. This guide explains how to review a register against the actual drawing package before issue or site use.",
+    metaTitle: "How to Review an Architect's Drawing Register | Krain Studio",
+    description:
+      "A practical guide to reviewing an architect's drawing register, including missing PDFs, revision mismatches, title block checks, issue dates, drawing references and action lists.",
+    keywords: [
+      "drawing register",
+      "drawing register review",
+      "architect drawing register",
+      "revision control",
+      "title block check",
+      "drawing issue document control",
+      "RIBA Stage 4 Stage 5",
+      "technical drawing audit",
+      "architectural drawing review",
+      "drawing coordination",
+    ],
+    ogImage: "/krain/journal/how-to-review-architect-drawing-register-og.png",
+  },
+  {
     slug: "what-i-check-before-drawings-go-to-site",
     title: "What I check before a drawing package goes to site",
     date: "Jun 2026",

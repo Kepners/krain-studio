@@ -2,9 +2,11 @@ import type { ReactNode } from "react";
 import { JOURNAL, type JournalEntry } from "@/lib/journal";
 import { WhyWindowDoorSchedulesGoWrong } from "@/components/journal/posts/why-window-and-door-schedules-go-wrong";
 import { WhatICheckBeforeDrawingsGoToSite } from "@/components/journal/posts/what-i-check-before-drawings-go-to-site";
+import { HowToReviewArchitectDrawingRegister } from "@/components/journal/posts/how-to-review-architect-drawing-register";
 
 /** Maps a journal slug to its article body component. Add an entry here when a post is ready to publish. */
 export const POST_CONTENT: Record<string, () => ReactNode> = {
+  "how-to-review-architect-drawing-register": HowToReviewArchitectDrawingRegister,
   "what-i-check-before-drawings-go-to-site": WhatICheckBeforeDrawingsGoToSite,
   "why-window-and-door-schedules-go-wrong": WhyWindowDoorSchedulesGoWrong,
 };
