@@ -4,9 +4,11 @@ import { WhyWindowDoorSchedulesGoWrong } from "@/components/journal/posts/why-wi
 import { WhatICheckBeforeDrawingsGoToSite } from "@/components/journal/posts/what-i-check-before-drawings-go-to-site";
 import { HowToReviewArchitectDrawingRegister } from "@/components/journal/posts/how-to-review-architect-drawing-register";
 import { Stage4VsStage5Drawings } from "@/components/journal/posts/stage-4-vs-stage-5-drawings";
+import { BuildingControlDrawingSupport } from "@/components/journal/posts/building-control-drawing-support";
 
 /** Maps a journal slug to its article body component. Add an entry here when a post is ready to publish. */
 export const POST_CONTENT: Record<string, () => ReactNode> = {
+  "building-control-drawing-support": BuildingControlDrawingSupport,
   "stage-4-vs-stage-5-drawings": Stage4VsStage5Drawings,
   "how-to-review-architect-drawing-register": HowToReviewArchitectDrawingRegister,
   "what-i-check-before-drawings-go-to-site": WhatICheckBeforeDrawingsGoToSite,

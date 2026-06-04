@@ -29,6 +29,34 @@ export type JournalEntry = {
 
 export const JOURNAL: JournalEntry[] = [
   {
+    slug: "building-control-drawing-support",
+    title: "Building Control drawing support: what it is and what it is not",
+    date: "Jun 2026",
+    dateISO: "2026-06-04",
+    publishedISO: "2026-06-04T11:00:00+01:00",
+    modifiedISO: "2026-06-04T11:00:00+01:00",
+    kind: "Technical guide",
+    readingTime: "13 min read",
+    excerpt:
+      "Building Control drawing support can help prepare, coordinate and review technical information for Building Regulations review. This guide explains what the service includes, what it does not include, and why it should never be confused with approval or certification.",
+    metaTitle: "Building Control Drawing Support: What It Is and What It Is Not | Krain Studio",
+    description:
+      "A practical guide to Building Control drawing support, explaining what technical drawing help can include, what it does not replace, and why clear service boundaries matter.",
+    keywords: [
+      "Building Control drawing support",
+      "Building Regulations drawings",
+      "Approved Documents",
+      "technical drawing production",
+      "construction details",
+      "NHBC LABC warranty",
+      "drawing review",
+      "drawing coordination",
+      "architectural technology",
+      "AutoCAD 2D",
+    ],
+    ogImage: "/krain/journal/building-control-drawing-support-og.png",
+  },
+  {
     slug: "stage-4-vs-stage-5-drawings",
     title: "Stage 4 vs Stage 5 drawings: what actually changes?",
     date: "Jun 2026",
