@@ -130,7 +130,7 @@ export function Hero() {
               <span>
                 Drawn at{" "}
                 <span style={{ color: palette.accent, fontWeight: 300, position: "relative" }}>
-                  1:5
+                  1:20
                   <span
                     aria-hidden
                     className="krain-flicker"
@@ -141,7 +141,7 @@ export function Hero() {
                       filter: "blur(20px)",
                     }}
                   >
-                    1:5
+                    1:20
                   </span>
                 </span>
                 .

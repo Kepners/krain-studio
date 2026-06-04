@@ -34,7 +34,7 @@ export function Header() {
         borderBottom: `1px solid ${palette.rule}`,
       }}
     >
-      <a href="#" aria-label="Krain Studio home" style={{ display: "flex", alignItems: "center" }}>
+      <a href="/" aria-label="Krain Studio home" style={{ display: "flex", alignItems: "center" }}>
         <Image
           src="/krain/logo-wordmark.png"
           alt="Krain Studio"
