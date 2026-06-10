@@ -5,9 +5,11 @@ import { WhatICheckBeforeDrawingsGoToSite } from "@/components/journal/posts/wha
 import { HowToReviewArchitectDrawingRegister } from "@/components/journal/posts/how-to-review-architect-drawing-register";
 import { Stage4VsStage5Drawings } from "@/components/journal/posts/stage-4-vs-stage-5-drawings";
 import { BuildingControlDrawingSupport } from "@/components/journal/posts/building-control-drawing-support";
+import { BuildabilityReviewBeforeIssue } from "@/components/journal/posts/buildability-review-before-issue";
 
 /** Maps a journal slug to its article body component. Add an entry here when a post is ready to publish. */
 export const POST_CONTENT: Record<string, () => ReactNode> = {
+  "buildability-review-before-issue": BuildabilityReviewBeforeIssue,
   "building-control-drawing-support": BuildingControlDrawingSupport,
   "stage-4-vs-stage-5-drawings": Stage4VsStage5Drawings,
   "how-to-review-architect-drawing-register": HowToReviewArchitectDrawingRegister,

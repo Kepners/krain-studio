@@ -29,6 +29,34 @@ export type JournalEntry = {
 
 export const JOURNAL: JournalEntry[] = [
   {
+    slug: "buildability-review-before-issue",
+    title: "Buildability review: the questions we ask before a drawing is issued",
+    date: "Jun 2026",
+    dateISO: "2026-06-11",
+    publishedISO: "2026-06-11T09:00:00+01:00",
+    modifiedISO: "2026-06-11T09:00:00+01:00",
+    kind: "Technical guide",
+    readingTime: "14 min read",
+    excerpt:
+      "A drawing can look finished and still not be ready to build from. This guide runs through the buildability questions we ask before a drawing is issued — coordination, junctions, structure, drainage, levels, schedules and the assumptions that become site queries.",
+    metaTitle: "Buildability Review: The Questions We Ask Before a Drawing Is Issued | Krain Studio",
+    description:
+      "A practical buildability review checklist: the questions to ask before a drawing is issued, covering coordination, junctions, structure, drainage, levels, schedules, supplier information and fire/acoustic/thermal lines.",
+    keywords: [
+      "buildability review",
+      "construction drawings",
+      "drawing coordination",
+      "junction details",
+      "drainage coordination",
+      "drawing audit",
+      "RIBA Stage 4 Stage 5",
+      "schedule check",
+      "site queries",
+      "architectural technology",
+    ],
+    ogImage: "/krain/journal/buildability-review-before-issue-og.png",
+  },
+  {
     slug: "building-control-drawing-support",
     title: "Building Control drawing support: what it is and what it is not",
     date: "Jun 2026",
