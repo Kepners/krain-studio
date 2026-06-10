@@ -26,12 +26,12 @@ export function WhatICheckBeforeDrawingsGoToSite() {
       </Figure>
 
       <P>
-        At Krain Studio, my focus is not just producing technical drawings. A large part of the value is{" "}
+        At Krain Studio, our focus is not just producing technical drawings. A large part of the value is{" "}
         <A href="/services#review">reviewing information before it is issued</A>, so the project team has a
         clearer understanding of what is missing, what conflicts, and what needs to be resolved before the
         drawings are relied on by contractors, consultants, clients or site teams.
       </P>
-      <P>This article explains the main things I check before a drawing package goes to site.</P>
+      <P>This article explains the main things we check before a drawing package goes to site.</P>
 
       <Figure caption="The ten checks, at a glance — jump to any section.">
         <TenChecksList />
@@ -40,7 +40,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
       <H2 id="drawing-register">1. Does the drawing register match the actual files?</H2>
       <P>The first check is simple, but it catches a lot of problems.</P>
       <P>
-        I compare the drawing register against the actual PDF files being issued. The register may say a
+        We compare the drawing register against the actual PDF files being issued. The register may say a
         drawing exists, but the PDF may be missing. A folder may contain extra drawings that are not on
         the register. A drawing may be listed at one revision but the file in the issue folder may be at
         another.
@@ -72,7 +72,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         The floor plans, elevations, sections and details should all describe the same building. If one
         drawing has changed but another has not been updated, the package can start to contradict itself.
       </P>
-      <P>I look for mismatches between:</P>
+      <P>We look for mismatches between:</P>
       <Bullets
         items={[
           "floor plans and elevations",
@@ -98,10 +98,10 @@ export function WhatICheckBeforeDrawingsGoToSite() {
       <H2 id="detail-references">3. Are the detail references actually useful?</H2>
       <P>Detail references are only useful if they point to the right information.</P>
       <P>
-        I check whether detail tags, section markers and callouts lead to real drawings and relevant
+        We check whether detail tags, section markers and callouts lead to real drawings and relevant
         details. A drawing may have plenty of references on it, but that does not mean they are correct.
       </P>
-      <P>The questions I ask are:</P>
+      <P>The questions we ask are:</P>
       <Bullets
         items={[
           "does the referenced detail exist?",
@@ -129,7 +129,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         of the most common areas for errors.
       </P>
       <P>
-        I check whether every window and door mark shown on plan and elevation is included in the
+        We check whether every window and door mark shown on plan and elevation is included in the
         schedule, and whether the schedule information appears to match the drawing intent.
       </P>
       <P>Common problems include:</P>
@@ -157,10 +157,10 @@ export function WhatICheckBeforeDrawingsGoToSite() {
       <H2 id="dimensions">5. Are dimensions clear enough to build from?</H2>
       <P>Drawings can look neat but still fail to communicate enough dimensional information.</P>
       <P>
-        I review whether key dimensions are present, readable and useful. That does not mean every drawing
+        We review whether key dimensions are present, readable and useful. That does not mean every drawing
         needs to be over-dimensioned. It means the critical setting-out information needs to be clear.
       </P>
-      <P>I look for:</P>
+      <P>We look for:</P>
       <Bullets
         items={[
           "missing overall dimensions",
@@ -188,7 +188,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         structure, floor zones, ceiling zones, fire compartmentation, acoustics and vertical riser
         positions.
       </P>
-      <P>I check for obvious risks such as:</P>
+      <P>We check for obvious risks such as:</P>
       <Bullets
         items={[
           "long horizontal drainage runs without clear falls",
@@ -213,7 +213,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         Openings, joist directions, steel positions, padstones, foundations, lintels, roof structure and
         floor zones all affect whether the architectural intent can actually be built.
       </P>
-      <P>I check for signs that the structure has not been properly allowed for, including:</P>
+      <P>We check for signs that the structure has not been properly allowed for, including:</P>
       <Bullets
         items={[
           "drainage or services passing through steels",
@@ -238,7 +238,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         insulation, access, security, sound or energy performance. These notes need to be coordinated with
         the actual drawn information.
       </P>
-      <P>I look for obvious gaps or contradictions, such as:</P>
+      <P>We look for obvious gaps or contradictions, such as:</P>
       <Bullets
         items={[
           "notes copied from another project",
@@ -267,7 +267,7 @@ export function WhatICheckBeforeDrawingsGoToSite() {
         history. But a contractor, consultant or client may only see the issued drawings. They do not
         always know which assumptions were made or which decisions are still unresolved.
       </P>
-      <P>I ask:</P>
+      <P>We ask:</P>
       <Bullets
         items={[
           "would a new person understand this drawing?",

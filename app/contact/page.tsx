@@ -36,7 +36,7 @@ export default function ContactPage() {
         </h1>
         <p style={{ fontSize: 18, lineHeight: 1.6, opacity: 0.85, maxWidth: 680, margin: "0 0 40px" }}>
           Send the current PDF/DWG set, drawing register, schedules and a short note on the issue,
-          deadline or package stage. I’ll come back with a clear view of what’s involved.
+          deadline or package stage. We’ll come back with a clear view of what’s involved.
         </p>
 
         <div style={{ display: "flex", gap: 18, alignItems: "center", flexWrap: "wrap", marginBottom: 56 }}>

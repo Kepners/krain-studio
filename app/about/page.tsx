@@ -45,12 +45,12 @@ export default function AboutPage() {
         </p>
 
         <P>
-          With over 20 years’ experience across residential, commercial and mixed-use projects, I
+          With over 20 years’ experience across residential, commercial and mixed-use projects, we
           understand how drawings are used by architects, developers, contractors, consultants and site
           teams.
         </P>
         <P>
-          I help project teams turn design intent into coordinated, buildable information — producing
+          We help project teams turn design intent into coordinated, buildable information — producing
           clear drawings, reviewing technical information, identifying coordination gaps and helping
           resolve construction or site-related issues before they become costly problems.
         </P>
@@ -63,13 +63,13 @@ export default function AboutPage() {
 
         <H2>Confidential project work</H2>
         <P>
-          Much of my work is carried out on live architectural and construction projects where client
-          confidentiality, drawing copyright and project information must be protected. I do not publish
+          Much of our work is carried out on live architectural and construction projects where client
+          confidentiality, drawing copyright and project information must be protected. We do not publish
           identifiable client drawings, project locations, title blocks or original design material. Any
           examples shown are representative and anonymised.
         </P>
 
-        <H2>Where I’m based</H2>
+        <H2>Where we’re based</H2>
         <P>Based in Biggleswade, Bedfordshire — working with project teams across the UK.</P>
       </article>
       <ContactBand />

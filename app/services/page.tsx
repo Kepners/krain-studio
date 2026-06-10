@@ -175,9 +175,9 @@ export default function ServicesPage() {
           construction or site-related issues before they become costly problems.
         </P>
 
-        <H2>What I do</H2>
+        <H2>What we do</H2>
         <P>
-          I can be brought in to produce technical drawings, construction details and working drawing
+          We can be brought in to produce technical drawings, construction details and working drawing
           information, or to review existing architectural drawings where a project team needs greater
           confidence in the information being used.
         </P>
@@ -228,7 +228,7 @@ export default function ServicesPage() {
 
         <H2>Construction detail &amp; site issue support</H2>
         <P>
-          I can also assist with specific technical details or site-related construction issues where
+          We can also assist with specific technical details or site-related construction issues where
           drawings need interpretation, clarification or further technical input.
         </P>
         <P>
@@ -244,23 +244,23 @@ export default function ServicesPage() {
 
         <H2>Confidential project work</H2>
         <P>
-          Much of my work is carried out on live architectural and construction projects where client
+          Much of our work is carried out on live architectural and construction projects where client
           confidentiality, drawing copyright and project information must be protected.
         </P>
         <P>
-          For that reason, I do not publish identifiable client drawings, project locations, title blocks
+          For that reason, we do not publish identifiable client drawings, project locations, title blocks
           or original design material. Any examples shown are anonymised, recreated or representative
           samples used to demonstrate the type of technical work carried out.
         </P>
 
-        <H2>Why bring me in?</H2>
+        <H2>Why bring us in?</H2>
         <P>
-          With over 20 years’ experience across residential, commercial and mixed-use projects, I
+          With over 20 years’ experience across residential, commercial and mixed-use projects, we
           understand how drawings are used by architects, developers, contractors, consultants and site
           teams.
         </P>
         <P>
-          I help teams produce clearer information, find weak points earlier and reduce uncertainty before
+          We help teams produce clearer information, find weak points earlier and reduce uncertainty before
           or during construction.
         </P>
         <Lead>

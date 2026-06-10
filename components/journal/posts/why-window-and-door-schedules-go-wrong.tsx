@@ -342,7 +342,7 @@ export function WhyWindowDoorSchedulesGoWrong() {
       />
       <P>If only one drawing is updated, the package becomes inconsistent.</P>
       <P>
-        This is why revision discipline is critical. When reviewing a package, I look for signs that a
+        This is why revision discipline is critical. When reviewing a package, we look for signs that a
         change has been carried through the full set rather than corrected in one isolated location.
       </P>
 
@@ -392,7 +392,7 @@ export function WhyWindowDoorSchedulesGoWrong() {
 
       <P>The schedule needs to be checked against the whole drawing package.</P>
       <P>
-        At Krain Studio, I review window and door information as part of{" "}
+        At Krain Studio, we review window and door information as part of{" "}
         <A href="/journal/what-i-check-before-drawings-go-to-site">wider technical drawing audits</A>. The
         aim is to identify missing references, conflicting information, unclear notes, schedule gaps and
         buildability risks before issue, procurement or site use.

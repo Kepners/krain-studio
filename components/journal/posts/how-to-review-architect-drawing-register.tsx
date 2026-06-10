@@ -107,7 +107,7 @@ export function HowToReviewArchitectDrawingRegister() {
         If drawing numbers are wrong, duplicated or inconsistent, the project team cannot reliably refer
         to the information.
       </P>
-      <P>I check for:</P>
+      <P>We check for:</P>
       <Bullets
         items={[
           "Duplicate drawing numbers",
@@ -134,7 +134,7 @@ export function HowToReviewArchitectDrawingRegister() {
         A drawing register may say Revision C, the PDF file name may say Revision B, and the title block
         may show Revision D. That kind of mismatch causes confusion very quickly.
       </P>
-      <P>When reviewing revisions, I check:</P>
+      <P>When reviewing revisions, we check:</P>
       <Bullets
         items={[
           "Register revision",
@@ -171,7 +171,7 @@ export function HowToReviewArchitectDrawingRegister() {
         &ldquo;General Arrangement Plan&rdquo;, that may not be a major issue. But if the title is
         misleading, outdated or inconsistent, it can create confusion.
       </P>
-      <P>I check for:</P>
+      <P>We check for:</P>
       <Bullets
         items={[
           "Drawing titles that differ between register and title block",
@@ -194,7 +194,7 @@ export function HowToReviewArchitectDrawingRegister() {
         to make sense. If a drawing appears to have been revised after the issue date, or if key drawings
         are older than the information they refer to, the package may be inconsistent.
       </P>
-      <P>I check for:</P>
+      <P>We check for:</P>
       <Bullets
         items={[
           "Drawings with issue dates that do not match the issue",
@@ -221,7 +221,7 @@ export function HowToReviewArchitectDrawingRegister() {
         drainage layouts but no relevant service or riser details.
       </P>
       <P>
-        Depending on the project, I check whether the register includes the expected drawing types, such
+        Depending on the project, we check whether the register includes the expected drawing types, such
         as:
       </P>
       <Bullets
@@ -258,7 +258,7 @@ export function HowToReviewArchitectDrawingRegister() {
         refer to a window schedule. A door schedule may refer to a plan. A drainage layout may refer to a
         riser detail.
       </P>
-      <P>I look for references such as:</P>
+      <P>We look for references such as:</P>
       <Bullets
         items={[
           "“Refer to drawing...”",
@@ -271,7 +271,7 @@ export function HowToReviewArchitectDrawingRegister() {
           "Specification references",
         ]}
       />
-      <P>Then I ask:</P>
+      <P>Then we ask:</P>
       <Bullets
         items={[
           "Does the referenced drawing exist?",
@@ -295,7 +295,7 @@ export function HowToReviewArchitectDrawingRegister() {
         fixing, but they are different from technical design queries such as drainage coordination, fire
         ratings, structural clashes or buildability risks.
       </P>
-      <P>When reviewing a register, I separate comments into categories:</P>
+      <P>When reviewing a register, we separate comments into categories:</P>
       <Bullets
         items={[
           "Missing from register",

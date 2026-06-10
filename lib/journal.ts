@@ -114,7 +114,7 @@ export const JOURNAL: JournalEntry[] = [
   },
   {
     slug: "what-i-check-before-drawings-go-to-site",
-    title: "What I check before a drawing package goes to site",
+    title: "What we check before a drawing package goes to site",
     date: "Jun 2026",
     dateISO: "2026-06-03",
     publishedISO: "2026-06-03T09:00:00+01:00",
@@ -123,7 +123,7 @@ export const JOURNAL: JournalEntry[] = [
     readingTime: "13 min read",
     excerpt:
       "Before architectural drawings go to site, they need more than a quick visual check. This article explains the key checks behind a proper technical drawing review, from drawing registers and revisions to schedules, drainage, structure and buildability.",
-    metaTitle: "What I Check Before a Drawing Package Goes to Site | Krain Studio",
+    metaTitle: "What We Check Before a Drawing Package Goes to Site | Krain Studio",
     description:
       "A practical guide to architectural drawing review, covering drawing registers, revisions, schedules, detail references, buildability, drainage coordination and site-readiness checks.",
     keywords: [

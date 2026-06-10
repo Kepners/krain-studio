@@ -24,7 +24,7 @@ export function WhoIHelp() {
           marginBottom: 24,
         }}
       >
-        Who I support
+        Who we support
       </div>
       <h2
         style={{
@@ -35,7 +35,7 @@ export function WhoIHelp() {
           margin: "0 0 48px",
         }}
       >
-        I support
+        We support
       </h2>
 
       <div
