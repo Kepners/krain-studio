@@ -154,7 +154,7 @@ export function Quote({ children }: { children: ReactNode }) {
 
 export function Figure({ children, caption }: { children: ReactNode; caption: string }) {
   return (
-    <figure style={{ margin: "48px 0", maxWidth: 940 }}>
+    <figure className="krain-figure" style={{ margin: "48px 0", maxWidth: 940 }}>
       {children}
       <figcaption
         style={{

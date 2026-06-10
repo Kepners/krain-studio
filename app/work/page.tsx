@@ -20,7 +20,7 @@ export default function WorkPage() {
     <main style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
       <Ticker />
       <Header />
-      <div style={{ position: "relative", zIndex: 2, padding: "clamp(56px, 8vw, 100px) 32px 56px", maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ position: "relative", zIndex: 2, padding: "clamp(56px, 8vw, 100px) clamp(16px, 5vw, 32px) 56px", maxWidth: 1100, margin: "0 auto" }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: palette.accent, marginBottom: 24 }}>
           Work
         </div>

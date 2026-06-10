@@ -97,7 +97,7 @@ function WorkCard({ p }: { p: WorkItem }) {
 // which supplies its own page heading).
 export function Work({ embedded = false }: { embedded?: boolean }) {
   return (
-    <section id="work" style={{ position: "relative", zIndex: 2, padding: embedded ? "0 32px 40px" : "120px 32px" }}>
+    <section id="work" style={{ position: "relative", zIndex: 2, padding: embedded ? "0 clamp(16px, 5vw, 32px) 40px" : "clamp(80px, 12vw, 120px) clamp(16px, 5vw, 32px)" }}>
       {!embedded && (
         <div
           style={{
@@ -127,7 +127,7 @@ export function Work({ embedded = false }: { embedded?: boolean }) {
         </div>
       )}
 
-      <div className="krain-job-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "44px 28px" }}>
+      <div className="krain-job-grid" style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(320px, 100%), 1fr))", gap: "44px 28px" }}>
         {PROJECTS.map((p, i) => (
           <WorkCard key={i} p={p} />
         ))}
@@ -155,6 +155,11 @@ export function Work({ embedded = false }: { embedded?: boolean }) {
         .krain-job:hover .krain-job-img { transform: scale(1.04); }
         .krain-job-plate { transition: box-shadow .4s; }
         .krain-job:hover .krain-job-plate { box-shadow: 0 28px 70px rgba(26,29,51,.2), 0 0 0 1px ${palette.accent}88; }
+        /* Touch devices never hover — give the cards a finished resting state */
+        @media (hover: none) {
+          .krain-job-img { transform: scale(1.02); }
+          .krain-job-plate { box-shadow: 0 20px 56px rgba(26,29,51,.15), 0 0 0 1px ${palette.accent}55; }
+        }
       `}</style>
     </section>
   );

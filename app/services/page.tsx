@@ -133,7 +133,7 @@ export default function ServicesPage() {
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "clamp(64px, 9vw, 120px) 32px 40px",
+          padding: "clamp(64px, 9vw, 120px) clamp(16px, 5vw, 32px) 40px",
           maxWidth: 1000,
           margin: "0 auto",
         }}

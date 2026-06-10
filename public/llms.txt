@@ -1,0 +1,26 @@
+# Krain Studio
+
+> Krain Studio is a freelance architectural-technology studio in Biggleswade, Bedfordshire (UK), producing RIBA Stage 4 and Stage 5 packages — construction-stage drawings, technical details, schedules and specifications — plus independent drawing-package review for architects, developers, contractors and private clients across the UK.
+
+We turn a design-stage scheme into a coordinated, buildable construction package. We produce Stage 4 (technical design) and Stage 5 (manufacturing & construction) drawings and details, and we review other teams' drawing sets for missing information, coordination errors and buildability risk before they reach site. We are a technical/production studio — we pick up where the design architect leaves off and make the set ready to build. We do not replace the architect, structural engineer, Building Control body or warranty provider.
+
+Contact: matt@krain.studio. Based in Biggleswade, Bedfordshire; working with project teams across the UK.
+
+## Services
+
+- [Services overview](https://www.krain.studio/services): Technical CAD production, construction details, Stage 4/5 documentation, drawing audits and site-query support
+- [Drawing review & technical audit](https://www.krain.studio/services#review): Independent check of a drawing package for missing references, coordination gaps and buildability risk
+
+## Journal
+
+- [What we check before a drawing package goes to site](https://www.krain.studio/journal/what-i-check-before-drawings-go-to-site): The ten checks behind a pre-issue technical drawing review
+- [Why window and door schedules go wrong](https://www.krain.studio/journal/why-window-and-door-schedules-go-wrong): Common window and door schedule coordination errors, and how to catch them
+- [How to review an architect's drawing register](https://www.krain.studio/journal/how-to-review-architect-drawing-register): A method for auditing a drawing register before issue
+- [Stage 4 vs Stage 5 drawings: what actually changes?](https://www.krain.studio/journal/stage-4-vs-stage-5-drawings): The practical difference between technical design and construction information
+- [Building Control drawing support: what it is and what it is not](https://www.krain.studio/journal/building-control-drawing-support): The scope of a Building Control drawing package
+
+## More
+
+- [Home](https://www.krain.studio/): Overview, selected work and how to start a brief
+- [About](https://www.krain.studio/about): The studio, 20+ years' experience, and our confidentiality approach
+- [Contact](https://www.krain.studio/contact): Send a PDF/DWG set, drawing register and schedules to start

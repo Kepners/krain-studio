@@ -25,6 +25,10 @@ export function Stats() {
       <style>{`
         @media (max-width: 900px) {
           .krain-stats { grid-template-columns: repeat(2, 1fr) !important; row-gap: 32px; }
+          .krain-stat:nth-child(2n) { border-right: none !important; }
+        }
+        @media (max-width: 600px) {
+          .krain-stat { padding: 0 16px !important; }
         }
       `}</style>
     </section>

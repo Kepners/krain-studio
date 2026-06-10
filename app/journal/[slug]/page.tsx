@@ -129,7 +129,7 @@ export default async function JournalPostPage({
         style={{
           position: "relative",
           zIndex: 2,
-          padding: "clamp(56px, 8vw, 100px) 32px 40px",
+          padding: "clamp(56px, 8vw, 100px) clamp(16px, 5vw, 32px) 40px",
           maxWidth: 1000,
           margin: "0 auto",
         }}

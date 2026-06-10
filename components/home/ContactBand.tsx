@@ -12,7 +12,7 @@ export function ContactBand() {
   const reduce = useReducedMotion();
 
   useEffect(() => {
-    if (reduce) return;
+    if (reduce || !window.matchMedia("(pointer: fine)").matches) return;
     const el = ref.current;
     if (!el) return;
     const onMove = (e: MouseEvent) => {
@@ -31,7 +31,7 @@ export function ContactBand() {
       ref={ref}
       id="contact"
       style={{
-        padding: "160px 32px",
+        padding: "clamp(72px, 14vw, 160px) clamp(16px, 5vw, 32px)",
         borderTop: `1px solid ${palette.rule}`,
         position: "relative",
         overflow: "hidden",
@@ -39,6 +39,7 @@ export function ContactBand() {
     >
       <div
         aria-hidden
+        className="krain-contact-glow"
         style={{
           position: "absolute",
           bottom: -300,
@@ -69,7 +70,7 @@ export function ContactBand() {
           style={{
             fontFamily: "var(--font-geist), sans-serif",
             fontWeight: 200,
-            fontSize: "clamp(56px, 11vw, 120px)",
+            fontSize: "clamp(44px, 9vw, 120px)",
             lineHeight: 0.96,
             letterSpacing: "-0.045em",
             margin: 0,
@@ -112,6 +113,11 @@ export function ContactBand() {
           <MagneticBtn href="/contact">Start a brief</MagneticBtn>
         </div>
       </div>
+      <style>{`
+        @media (max-width: 520px) {
+          .krain-contact-glow { width: 520px !important; height: 520px !important; right: -120px !important; bottom: -200px !important; }
+        }
+      `}</style>
     </section>
   );
 }

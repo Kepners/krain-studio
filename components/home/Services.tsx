@@ -17,7 +17,7 @@ function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: numbe
   const [hover, setHover] = useState(false);
   return (
     <a
-      href="#"
+      href="/services"
       onMouseEnter={() => setHover(true)}
       onMouseLeave={() => setHover(false)}
       style={{
@@ -87,6 +87,7 @@ function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: numbe
         </div>
         <div style={{ fontSize: 13, opacity: 0.6, marginTop: 6 }}>{d}</div>
         <div
+          className="krain-learn"
           style={{
             fontSize: 11,
             letterSpacing: "0.16em",
@@ -108,7 +109,7 @@ function ServiceCard({ k, t, d, i }: { k: string; t: string; d: string; i: numbe
 
 export function Services() {
   return (
-    <section id="services" style={{ padding: "120px 32px" }}>
+    <section id="services" style={{ padding: "clamp(80px, 12vw, 120px) clamp(16px, 5vw, 32px)" }}>
       <div
         style={{
           display: "flex",
@@ -173,6 +174,10 @@ export function Services() {
         }
         @media (max-width: 600px) {
           .krain-services-grid { grid-template-columns: 1fr !important; }
+        }
+        /* Touch devices never hover — keep the "Learn more" affordance visible */
+        @media (hover: none) {
+          .krain-learn { opacity: 1 !important; transform: translateX(0) !important; }
         }
       `}</style>
     </section>

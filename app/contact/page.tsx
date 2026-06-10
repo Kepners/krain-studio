@@ -27,7 +27,7 @@ export default function ContactPage() {
     <main style={{ position: "relative", minHeight: "100vh", overflow: "hidden" }}>
       <Ticker />
       <Header />
-      <article style={{ position: "relative", zIndex: 2, padding: "clamp(56px, 9vw, 120px) 32px 120px", maxWidth: 1000, margin: "0 auto" }}>
+      <article style={{ position: "relative", zIndex: 2, padding: "clamp(56px, 9vw, 120px) clamp(16px, 5vw, 32px) 120px", maxWidth: 1000, margin: "0 auto" }}>
         <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: "0.22em", textTransform: "uppercase", color: palette.accent, marginBottom: 24 }}>
           Contact
         </div>

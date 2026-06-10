@@ -45,7 +45,7 @@ export function Stat({ value, label, decimals = 0 }: Props) {
     : v.toLocaleString(undefined, { maximumFractionDigits: decimals });
 
   return (
-    <div ref={ref} style={{ padding: "0 32px", borderRight: `1px solid ${palette.rule}` }}>
+    <div ref={ref} className="krain-stat" style={{ padding: "0 32px", borderRight: `1px solid ${palette.rule}` }}>
       <div
         style={{
           fontFamily: "var(--font-geist), sans-serif",

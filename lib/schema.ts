@@ -31,6 +31,17 @@ export const organization = {
     "Drawing review",
     "Buildability",
   ],
+  hasOfferCatalog: {
+    "@type": "OfferCatalog",
+    name: "Services",
+    itemListElement: [
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "RIBA Stage 4 technical design drawings" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "RIBA Stage 5 construction drawings" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Construction detailing (1:5 / 1:10)" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Drawing register review & buildability audit" } },
+      { "@type": "Offer", itemOffered: { "@type": "Service", name: "Building Control drawing support" } },
+    ],
+  },
 } as const;
 
 export const website = {

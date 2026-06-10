@@ -37,7 +37,7 @@ export function Manifesto() {
       ref={ref}
       id="about"
       style={{
-        padding: "140px 32px",
+        padding: "clamp(88px, 14vw, 140px) clamp(20px, 5vw, 32px)",
         background: palette.ink,
         color: palette.bg,
         position: "relative",

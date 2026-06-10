@@ -217,7 +217,7 @@ export function Journal({
   // Dedicated /journal index: uniform card grid under the page's own heading.
   if (embedded) {
     return (
-      <section style={{ position: "relative", zIndex: 2, padding: "0 32px 48px" }}>
+      <section style={{ position: "relative", zIndex: 2, padding: "0 clamp(16px, 5vw, 32px) 48px" }}>
         <div
           style={{
             display: "grid",
@@ -236,7 +236,7 @@ export function Journal({
   }
 
   return (
-    <section id="journal" style={{ padding: "60px 32px 120px" }}>
+    <section id="journal" style={{ padding: "60px clamp(16px, 5vw, 32px) 120px" }}>
       <div
         style={{
           display: "flex",
@@ -279,7 +279,7 @@ export function Journal({
           className="krain-journal-grid"
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fit, minmax(min(280px, 100%), 1fr))",
             gap: 24,
             marginTop: 56,
           }}
