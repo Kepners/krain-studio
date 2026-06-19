@@ -1,10 +1,7 @@
-import { Lead, P, H2, Bullets, Quote, A, Figure } from "@/components/journal/Prose";
-import {
-  BuildabilityHero,
-  JunctionsSection,
-  BuildabilityChecklist,
-  ContractorQuestions,
-} from "@/components/journal/BuildabilityDiagrams";
+import { Lead, P, H2, Bullets, Quote, A, Figure, Img } from "@/components/journal/Prose";
+import { JunctionsSection, ContractorQuestions } from "@/components/journal/BuildabilityDiagrams";
+
+const IMG = "/krain/journal";
 
 export function BuildabilityReviewBeforeIssue() {
   return (
@@ -22,8 +19,13 @@ export function BuildabilityReviewBeforeIssue() {
       <Quote>Can someone actually build from this without guessing?</Quote>
       <P>That is where buildability review matters.</P>
 
-      <Figure caption="A sheet can look finished — clean linework, title block, a revision — and still leave the buildable questions open.">
-        <BuildabilityHero />
+      <Figure caption="A buildability review reads the whole package the way the site will — testing whether the junctions, levels, drainage, structure and schedules actually resolve before issue.">
+        <Img
+          src={`${IMG}/buildability-review-before-issue-hero.webp`}
+          alt="An architectural drawing package — floor plan, section, detail sheet and schedule — laid out on a dark desk, with review markers flagging the junction, levels, drainage, schedule and structure conditions a buildability review checks before a drawing is issued."
+          width={1024}
+          height={572}
+        />
       </Figure>
 
       <P>
@@ -39,6 +41,15 @@ export function BuildabilityReviewBeforeIssue() {
         coordination risks before they become site questions.
       </P>
       <P>This article explains the questions we ask before a drawing is issued.</P>
+
+      <Figure caption="How a buildability review runs: the drawing package becomes a marked-up set of risks, then an action list, then resolved information — before it is issued, priced or used on site.">
+        <Img
+          src={`${IMG}/buildability-review-flow.webp`}
+          alt="Buildability review flow diagram: a drawing package goes through a buildability review, which produces marked-up risks, then an action list, then project-team resolution, before the information is issued, priced or used on site."
+          width={1024}
+          height={559}
+        />
+      </Figure>
 
       <H2 id="stands-alone">
         1. Can the drawing be understood by someone who has not been in the meetings?
@@ -258,6 +269,15 @@ export function BuildabilityReviewBeforeIssue() {
         buildability review, not just document control.
       </P>
 
+      <Figure caption="Four ways a drawing package creates buildability risk — missing information, conflicting drawings, unresolved junctions, and site or practical risk.">
+        <Img
+          src={`${IMG}/buildability-risk-buckets.webp`}
+          alt="Four common buildability risk categories shown as labelled panels: missing information, conflicting drawings, unresolved junctions, and site or practical risk, each illustrated with simplified drawing fragments."
+          width={1024}
+          height={559}
+        />
+      </Figure>
+
       <H2 id="supplier">8. Has supplier information been properly coordinated?</H2>
       <P>Supplier information can improve a package, but only if it is properly fed back into the drawings.</P>
       <P>
@@ -395,8 +415,13 @@ export function BuildabilityReviewBeforeIssue() {
         before the drawings are issued than after they become site questions.
       </P>
 
-      <Figure caption="The buildability review, end to end — the checks that decide whether a sheet is ready to leave the office.">
-        <BuildabilityChecklist />
+      <Figure caption="The twelve questions behind a buildability review, in one view — the checks that decide whether a sheet is ready to leave the office.">
+        <Img
+          src={`${IMG}/buildability-review-12-questions.webp`}
+          alt="Infographic listing the twelve buildability questions to ask before a drawing is issued, numbered one to twelve, from “can someone understand it without the meeting history?” through drainage, levels, schedules and supplier information to “what would the contractor ask first?”."
+          width={1024}
+          height={559}
+        />
       </Figure>
 
       <P>

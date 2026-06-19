@@ -152,6 +152,36 @@ export function Quote({ children }: { children: ReactNode }) {
   );
 }
 
+/** Responsive in-content image — pre-optimised webp, lazy, native aspect ratio (no CLS). */
+export function Img({
+  src,
+  alt,
+  width,
+  height,
+}: {
+  src: string;
+  alt: string;
+  width: number;
+  height: number;
+}) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      width={width}
+      height={height}
+      loading="lazy"
+      decoding="async"
+      style={{
+        width: "100%",
+        height: "auto",
+        display: "block",
+        border: `1px solid ${palette.rule}`,
+      }}
+    />
+  );
+}
+
 export function Figure({ children, caption }: { children: ReactNode; caption: string }) {
   return (
     <figure className="krain-figure" style={{ margin: "48px 0", maxWidth: 940 }}>

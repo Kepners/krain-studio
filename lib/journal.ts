@@ -34,7 +34,7 @@ export const JOURNAL: JournalEntry[] = [
     date: "Jun 2026",
     dateISO: "2026-06-11",
     publishedISO: "2026-06-11T09:00:00+01:00",
-    modifiedISO: "2026-06-11T09:00:00+01:00",
+    modifiedISO: "2026-06-19T09:00:00+01:00",
     kind: "Technical guide",
     readingTime: "14 min read",
     excerpt:
@@ -54,7 +54,7 @@ export const JOURNAL: JournalEntry[] = [
       "site queries",
       "architectural technology",
     ],
-    ogImage: "/krain/journal/buildability-review-before-issue-og.png",
+    ogImage: "/krain/journal/buildability-review-before-issue-og.jpg",
   },
   {
     slug: "building-control-drawing-support",
