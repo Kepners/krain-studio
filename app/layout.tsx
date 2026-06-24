@@ -17,9 +17,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Krain Studio — Detailed construction design",
+  title: "Drawings you can build from with confidence. — Krain Studio",
   description:
-    "Krain Studio produces RIBA Stage 4–5 packages — construction-stage drawings, details and specs you can build to with confidence.",
+    "Clear technical drawings you can build from with confidence. Buildable drawings. Clear information. Fewer site issues. Architectural drawings made clear, coordinated and buildable.",
   keywords: [
     "architecture",
     "construction drawings",
@@ -33,9 +33,9 @@ export const metadata: Metadata = {
   ],
   metadataBase: new URL("https://www.krain.studio"),
   openGraph: {
-    title: "Krain Studio — Detailed construction design",
+    title: "Drawings you can build from with confidence.",
     description:
-      "RIBA Stage 4–5 construction packages — drawings you can build to with confidence.",
+      "Clear technical drawings you can build from with confidence. Buildable drawings. Clear information. Fewer site issues. Architectural drawings made clear, coordinated and buildable.",
     type: "website",
     url: "https://www.krain.studio",
     siteName: "Krain Studio",
@@ -43,9 +43,9 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Krain Studio — Detailed construction design",
+    title: "Drawings you can build from with confidence.",
     description:
-      "RIBA Stage 4–5 construction packages — drawings you can build to with confidence.",
+      "Clear technical drawings you can build from with confidence. Buildable drawings. Clear information. Fewer site issues. Architectural drawings made clear, coordinated and buildable.",
     images: ["/krain/og-default.png"],
   },
 };

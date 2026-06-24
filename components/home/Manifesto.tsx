@@ -7,7 +7,7 @@ import { FadeIn } from "@/components/ui/FadeIn";
 import { RevealWord } from "@/components/ui/RevealWord";
 
 const COPY = [
-  "No mood boards, no renderings. Drawings you can build to with confidence.",
+  "No mood boards, no renderings. Drawings you can build from with confidence.",
   "Every detail is drawn at the scale a tradesperson actually needs. 1:5 at thresholds, 1:10 elsewhere.",
   "We work with architects who'd rather be designing, contractors who want a clean set, clients who've been quoted twice for the same job.",
 ];
