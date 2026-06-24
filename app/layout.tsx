@@ -19,7 +19,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "Krain Studio — Detailed construction design",
   description:
-    "Krain is a small office producing RIBA Stage 4–5 packages — construction-stage drawings, details, and specs that turn a planning permission into a buildable thing.",
+    "Krain Studio produces RIBA Stage 4–5 packages — construction-stage drawings, details and specs you can build to with confidence.",
   keywords: [
     "architecture",
     "construction drawings",
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Krain Studio — Detailed construction design",
     description:
-      "RIBA Stage 4–5 construction packages. Drawings that turn permission into a buildable thing without a clipboard of RFIs.",
+      "RIBA Stage 4–5 construction packages — drawings you can build to with confidence.",
     type: "website",
     url: "https://www.krain.studio",
     siteName: "Krain Studio",
@@ -45,7 +45,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Krain Studio — Detailed construction design",
     description:
-      "RIBA Stage 4–5 construction packages. Drawings that turn permission into a buildable thing.",
+      "RIBA Stage 4–5 construction packages — drawings you can build to with confidence.",
     images: ["/krain/og-default.png"],
   },
 };
