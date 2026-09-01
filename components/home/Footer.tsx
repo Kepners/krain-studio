@@ -21,9 +21,12 @@ export function Footer() {
     >
       <span>© Krain Studio · MMXXVI</span>
       <nav
-        aria-label="Contact channels"
+        aria-label="Site links and contact channels"
         style={{ display: "flex", gap: 20, flexWrap: "wrap" }}
       >
+        <a href="/privacy" style={{ color: "inherit", textDecoration: "none" }}>
+          Privacy
+        </a>
         {channels().map((c) => (
           <a
             key={c.key}
