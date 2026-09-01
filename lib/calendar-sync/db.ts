@@ -45,6 +45,8 @@ export const setSetting = (key: string, value: string) => {
     ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = CURRENT_TIMESTAMP`).run(key, value);
 };
 
+export const deleteSetting = (key: string) => db().prepare("DELETE FROM settings WHERE key = ?").run(key);
+
 export const getSecretJson = <T>(key: string): T | undefined => {
   const row = getSetting(key);
   return row ? JSON.parse(unseal(row.value)) as T : undefined;
@@ -70,6 +72,7 @@ export const saveLink = (link: EventLink) => {
 
 export const markDeleted = (link: EventLink) => saveLink({ ...link, deletedAt: new Date().toISOString() });
 export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
+export const clearEventLinks = () => db().prepare("DELETE FROM event_links").run();
 
 export const acceptNotification = (provider: Provider, notificationId: string) => {
   try {
@@ -80,4 +83,4 @@ export const acceptNotification = (provider: Provider, notificationId: string) =
   }
 };
 
-export const calendarDb = { db, getSetting, setSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, acceptNotification };
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification };

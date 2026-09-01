@@ -1,5 +1,5 @@
 import { calendarDb } from "./db";
-import { eventHash, createGoogleEvent, createGraphEvent, deleteGoogleEvent, deleteGraphEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGoogleEvent, getGraphEvent, listGoogleChanges, listGraphEvents, renewGoogleChannel, renewGraphSubscription, updateGoogleEvent, updateGraphEvent } from "./providers";
+import { eventHash, createGoogleEvent, createGraphEvent, deleteGoogleCalendar, deleteGoogleEvent, deleteGraphEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGoogleCalendarId, getGoogleEvent, getGraphEvent, listGoogleChanges, listGraphEvents, renewGoogleChannel, renewGraphSubscription, updateGoogleEvent, updateGraphEvent } from "./providers";
 import type { EventLink, NormalizedEvent } from "./types";
 
 let syncTail: Promise<void> = Promise.resolve();
@@ -56,6 +56,8 @@ const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unkno
     }
     return;
   }
+  const properties = (googleEvent.extendedProperties as { private?: Record<string, unknown> } | undefined)?.private;
+  if (!link && !properties?.krainSyncOutlookEventId) return;
   const event = fromGoogle(googleEvent);
   const sourceHash = eventHash(event);
   if (link?.deletedAt) return;
@@ -118,6 +120,21 @@ export const maintainCalendarSync = async () => runExclusively(async () => {
   await renewGraphSubscription();
   await renewGoogleChannel();
   await reconcileMicrosoftUnsafe();
+  await syncGoogleChangesUnsafe();
+});
+
+export const moveKrainEventsToGooglePrimary = async () => runExclusively(async () => {
+  const previousCalendarId = getGoogleCalendarId();
+  if (!previousCalendarId || previousCalendarId === "primary") return;
+  const expectedLinks = calendarDb.listActiveLinks().length;
+  calendarDb.setSetting("google:calendar_id", "primary");
+  calendarDb.deleteSetting("google:sync_token");
+  calendarDb.deleteSetting("google:channel");
+  calendarDb.clearEventLinks();
+  await reconcileMicrosoftUnsafe();
+  const movedLinks = calendarDb.listActiveLinks().length;
+  if (movedLinks < expectedLinks) throw new Error("Krain event move did not complete. The old Google calendar was kept.");
+  await deleteGoogleCalendar(previousCalendarId);
   await syncGoogleChangesUnsafe();
 });
 

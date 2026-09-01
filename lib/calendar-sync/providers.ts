@@ -143,7 +143,7 @@ const attendeeStatus = (value: unknown): CalendarAttendee["responseStatus"] =>
   value === "accepted" || value === "declined" || value === "tentative" || value === "needsAction" ? value : undefined;
 
 export const fromGoogle = (event: Record<string, unknown>): NormalizedEvent => ({
-  id: String(event.id), title: String(event.summary ?? ""), description: String(event.description ?? ""), location: String(event.location ?? ""),
+  id: String(event.id), title: String(event.summary ?? "").replace(/^KS\s*-\s*/i, ""), description: String(event.description ?? ""), location: String(event.location ?? ""),
   start: calendarDateTime(event.start as { date?: string; dateTime?: string }), end: calendarDateTime(event.end as { date?: string; dateTime?: string }),
   attendees: ((event.attendees as Array<Record<string, unknown>> | undefined) ?? []).filter(item => typeof item.email === "string").map(item => ({ email: String(item.email), name: typeof item.displayName === "string" ? item.displayName : undefined, responseStatus: attendeeStatus(item.responseStatus) })),
   recurrence: Array.isArray(event.recurrence) ? event.recurrence.map(String) : [],
@@ -156,7 +156,7 @@ export const fromGraph = (event: Record<string, unknown>): NormalizedEvent => ({
   recurrence: graphRecurrenceToGoogle(event.recurrence as { pattern?: Record<string, unknown>; range?: Record<string, unknown> } | undefined),
 });
 
-const googleBody = (event: NormalizedEvent, outlookId: string) => ({ summary: event.title, description: event.description, location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), attendees: event.attendees.map(item => ({ email: item.email, displayName: item.name })), recurrence: event.recurrence, extendedProperties: { private: { krainSyncOutlookEventId: outlookId, krainSyncVersion: "1" } } });
+const googleBody = (event: NormalizedEvent, outlookId: string) => ({ summary: `KS - ${event.title}`, description: event.description, location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), attendees: event.attendees.map(item => ({ email: item.email, displayName: item.name })), recurrence: event.recurrence, colorId: "6", extendedProperties: { private: { krainSyncOutlookEventId: outlookId, krainSyncVersion: "1" } } });
 const graphBody = (event: NormalizedEvent, googleId: string, includeExtension: boolean) => ({ subject: event.title, body: { contentType: "text", content: event.description }, location: { displayName: event.location }, start: dateForGraph(event.start), end: dateForGraph(event.end), isAllDay: event.start.kind === "date", attendees: event.attendees.map(item => ({ emailAddress: { address: item.email, name: item.name }, type: "required" })), recurrence: googleRecurrenceToGraph(event.recurrence, event.start), ...(includeExtension ? { extensions: [{ "@odata.type": "microsoft.graph.openTypeExtension", extensionName: "com.krain.calendarSync", googleEventId: googleId, version: "1" }] } : {}) });
 
 const graphEventsPath = () => calendarEnv.microsoftCalendarId() === "primary" ? "/me/events" : `/me/calendars/${encodeURIComponent(calendarEnv.microsoftCalendarId())}/events`;
@@ -165,9 +165,8 @@ export const getGoogleCalendarId = () => calendarDb.getSetting("google:calendar_
 export const ensureGoogleCalendar = async () => {
   const existing = getGoogleCalendarId();
   if (existing) return existing;
-  const created = await google("/calendars", { method: "POST", body: JSON.stringify({ summary: "Krain Studio" }) }) as { id: string };
-  calendarDb.setSetting("google:calendar_id", created.id);
-  return created.id;
+  calendarDb.setSetting("google:calendar_id", "primary");
+  return "primary";
 };
 
 export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`);
@@ -175,6 +174,7 @@ export const getGoogleEvent = (eventId: string) => google(`/calendars/${encodeUR
 export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, { method: "POST", body: JSON.stringify(googleBody(event, outlookId)) });
 export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, { method: "PUT", body: JSON.stringify(googleBody(event, outlookId)) });
 export const deleteGoogleEvent = (eventId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, { method: "DELETE" });
+export const deleteGoogleCalendar = (calendarId: string) => google(`/calendars/${encodeURIComponent(calendarId)}`, { method: "DELETE" });
 export const createGraphEvent = (event: NormalizedEvent, googleId: string) => graph(graphEventsPath(), { method: "POST", body: JSON.stringify(graphBody(event, googleId, true)) });
 export const updateGraphEvent = (eventId: string, event: NormalizedEvent, googleId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`, { method: "PATCH", body: JSON.stringify(graphBody(event, googleId, false)) });
 export const deleteGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`, { method: "DELETE" });
