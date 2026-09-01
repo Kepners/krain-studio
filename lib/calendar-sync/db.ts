@@ -55,19 +55,21 @@ export const setSecretJson = (key: string, value: unknown) => setSetting(key, se
 export const getToken = (provider: Provider) => getSecretJson<OAuthToken>(`${provider}:token`);
 export const setToken = (provider: Provider, token: OAuthToken) => setSecretJson(`${provider}:token`, token);
 
-export const getLinkByOutlook = (outlookEventId: string) => db().prepare("SELECT * FROM event_links WHERE outlook_event_id = ?").get(outlookEventId) as EventLink | undefined;
-export const getLinkByGoogle = (googleEventId: string) => db().prepare("SELECT * FROM event_links WHERE google_event_id = ?").get(googleEventId) as EventLink | undefined;
+const eventLinkFields = "outlook_event_id AS outlookEventId, google_event_id AS googleEventId, outlook_hash AS outlookHash, google_hash AS googleHash, deleted_at AS deletedAt";
+
+export const getLinkByOutlook = (outlookEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE outlook_event_id = ?`).get(outlookEventId) as EventLink | undefined;
+export const getLinkByGoogle = (googleEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE google_event_id = ?`).get(googleEventId) as EventLink | undefined;
 
 export const saveLink = (link: EventLink) => {
   db().prepare(`INSERT INTO event_links(outlook_event_id, google_event_id, outlook_hash, google_hash, deleted_at, updated_at)
-    VALUES (@outlookEventId, @googleEventId, @outlookHash, @googleHash, @deletedAt, CURRENT_TIMESTAMP)
+    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(outlook_event_id) DO UPDATE SET google_event_id = excluded.google_event_id,
       outlook_hash = excluded.outlook_hash, google_hash = excluded.google_hash,
-      deleted_at = excluded.deleted_at, updated_at = CURRENT_TIMESTAMP`).run(link);
+      deleted_at = excluded.deleted_at, updated_at = CURRENT_TIMESTAMP`).run(link.outlookEventId, link.googleEventId, link.outlookHash, link.googleHash, link.deletedAt);
 };
 
 export const markDeleted = (link: EventLink) => saveLink({ ...link, deletedAt: new Date().toISOString() });
-export const listActiveLinks = () => db().prepare("SELECT * FROM event_links WHERE deleted_at IS NULL").all() as EventLink[];
+export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
 
 export const acceptNotification = (provider: Provider, notificationId: string) => {
   try {
