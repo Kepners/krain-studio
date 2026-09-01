@@ -170,7 +170,7 @@ export const ensureGoogleCalendar = async () => {
   return created.id;
 };
 
-export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}?$expand=extensions`);
+export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`);
 export const getGoogleEvent = (eventId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}`);
 export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, { method: "POST", body: JSON.stringify(googleBody(event, outlookId)) });
 export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, { method: "PUT", body: JSON.stringify(googleBody(event, outlookId)) });
@@ -181,7 +181,7 @@ export const deleteGraphEvent = (eventId: string) => graph(`${graphEventsPath()}
 
 export const listGraphEvents = async () => {
   const results: Record<string, unknown>[] = [];
-  let page: string | undefined = `${graphEventsPath()}?$top=100&$expand=extensions`;
+  let page: string | undefined = `${graphEventsPath()}?$top=100`;
   while (page) {
     const response = await graph(page) as { value?: Record<string, unknown>[]; "@odata.nextLink"?: string };
     results.push(...(response.value ?? []));
