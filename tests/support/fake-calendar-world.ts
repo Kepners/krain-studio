@@ -1,35 +1,44 @@
-// A two-provider world for driving the real sync service end to end.
+// A stand-in Microsoft and Google, for driving the real sync service end to end.
 //
-// It is a stand-in for Microsoft and Google, not for any lib/calendar-sync code:
-// every module under test is the real one. The world reproduces the one Microsoft
-// behaviour that caused the incident — Graph stores a description as HTML, so
-// text handed to it comes back escaped one level more than it went in.
+// Nothing under lib/calendar-sync is stubbed; only the two providers are.
+//
+// The Microsoft side deliberately ACCEPTS writes it should never be sent. If the
+// sync ever issues one, the world serves it and the request stays visible in the
+// recorder, so a check can assert on it. A world that refused would hide the very
+// thing the checks exist to catch.
+//
+// Two Microsoft behaviours are reproduced faithfully, because both caused defects:
+//   - Graph stores a description as HTML, so text handed to it comes back escaped.
+//   - Graph sends a BARE timestamp with a separate timeZone field, never a "Z".
 
-import { escapeOnce, type Recorded } from "./calendar-rig";
+import { escapeOnce, BST_DAY, type Recorded } from "./calendar-rig";
 
 export type GraphEvent = Record<string, unknown> & { id: string };
 export type GoogleEvent = Record<string, unknown> & { id: string };
 
 export const graphStoredBody = (text: string) => ({ contentType: "html", content: `<html><head></head><body><p>${escapeOnce(text)}</p></body></html>` });
 
+/** How Microsoft Graph actually writes a time: no offset on the value, the zone in its own field. */
+export const graphTime = (day: string, clock: string) => ({ dateTime: `${day}T${clock}.0000000`, timeZone: "UTC" });
+
 export class FakeCalendarWorld {
   readonly outlook = new Map<string, GraphEvent>();
   readonly google = new Map<string, GoogleEvent>();
-  private nextOutlook = 1;
   private nextGoogle = 1;
-  private syncToken = 0;
   /** Every request the world could not route. A non-empty list is a defect in the check, never a pass. */
   readonly unrouted: Recorded[] = [];
+  /** Every request that would have CHANGED a Microsoft calendar. Must always be empty. */
+  readonly outlookChanges: Recorded[] = [];
 
   seedOutlook(event: Partial<GraphEvent> & { id: string; description?: string }) {
     const { description, ...rest } = event;
     const stored: GraphEvent = {
       subject: "Site visit",
       location: { displayName: "Unit 4" },
-      start: { dateTime: "2026-09-10T09:00:00.0000000", timeZone: "UTC" },
-      end: { dateTime: "2026-09-10T10:00:00.0000000", timeZone: "UTC" },
+      start: graphTime(BST_DAY, "09:00:00"),
+      end: graphTime(BST_DAY, "10:00:00"),
       attendees: [],
-      body: description === undefined ? graphStoredBody("Bring the as-built set") : graphStoredBody(description),
+      body: graphStoredBody(description ?? "Bring the as-built set"),
       ...rest,
     } as GraphEvent;
     this.outlook.set(stored.id, stored);
@@ -41,9 +50,8 @@ export class FakeCalendarWorld {
       summary: "KS - Site visit",
       description: "Bring the as-built set",
       location: "Unit 4",
-      start: { dateTime: "2026-09-10T09:00:00.000Z", timeZone: "UTC" },
-      end: { dateTime: "2026-09-10T10:00:00.000Z", timeZone: "UTC" },
-      attendees: [],
+      start: { dateTime: `${BST_DAY}T09:00:00.000Z`, timeZone: "UTC" },
+      end: { dateTime: `${BST_DAY}T10:00:00.000Z`, timeZone: "UTC" },
       recurrence: [],
       ...event,
     } as GoogleEvent;
@@ -54,7 +62,6 @@ export class FakeCalendarWorld {
   handle = (call: Recorded): unknown => {
     const url = new URL(call.url);
     const segments = url.pathname.split("/").filter(Boolean);
-
     if (url.hostname === "graph.microsoft.com") return this.handleGraph(call, segments, url);
     if (url.hostname === "www.googleapis.com") return this.handleGoogle(call, segments, url);
     this.unrouted.push(call);
@@ -62,12 +69,6 @@ export class FakeCalendarWorld {
   };
 
   private handleGraph(call: Recorded, segments: string[], url: URL): unknown {
-    if (segments.includes("subscriptions")) {
-      if (call.method === "POST" || call.method === "PATCH") return { id: "graph-subscription-1", expirationDateTime: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString() };
-      this.unrouted.push(call);
-      throw new Error(`unexpected Graph subscription request: ${call.method} ${url.pathname}`);
-    }
-    // /v1.0/me/events  or  /v1.0/me/events/{id}
     const events = segments.indexOf("events");
     if (events === -1) { this.unrouted.push(call); throw new Error(`unexpected Graph path: ${call.method} ${url.pathname}`); }
     const raw = segments[events + 1];
@@ -79,34 +80,21 @@ export class FakeCalendarWorld {
       if (!found) return new Response(JSON.stringify({ error: { code: "ErrorItemNotFound" } }), { status: 404 });
       return found;
     }
+
+    // Anything below this line should be unreachable. It is served, not refused, so a check can see it.
+    this.outlookChanges.push(call);
     if (call.method === "POST" && id === undefined) {
-      const created = this.applyGraphBody({ id: `AAMkOutlook-${this.nextOutlook += 1}`, attendees: [] } as GraphEvent, call.body);
+      const created = { id: `AAMkOutlook-forbidden-${this.outlookChanges.length}`, ...(call.body as Record<string, unknown>) } as GraphEvent;
       this.outlook.set(created.id, created);
       return created;
     }
-    if (call.method === "PATCH" && id !== undefined) {
-      const existing = this.outlook.get(id);
-      if (!existing) return new Response(JSON.stringify({ error: { code: "ErrorItemNotFound" } }), { status: 404 });
-      const updated = this.applyGraphBody({ ...existing }, call.body);
-      this.outlook.set(id, updated);
-      return updated;
-    }
     if (call.method === "DELETE" && id !== undefined) { this.outlook.delete(id); return undefined; }
-    this.unrouted.push(call);
-    throw new Error(`unexpected Graph request: ${call.method} ${url.pathname}`);
-  }
-
-  /** Microsoft stores a description as HTML, so text it is given comes back escaped one level more. */
-  private applyGraphBody(target: GraphEvent, body: unknown): GraphEvent {
-    const sent = (body ?? {}) as Record<string, unknown>;
-    const next: GraphEvent = { ...target };
-    for (const key of ["subject", "location", "start", "end", "isAllDay", "recurrence"]) {
-      if (sent[key] !== undefined) next[key] = sent[key];
+    if (id !== undefined) {
+      const merged = { ...(this.outlook.get(id) ?? { id }), ...(call.body as Record<string, unknown>), id } as GraphEvent;
+      this.outlook.set(id, merged);
+      return merged;
     }
-    const sentBody = sent.body as { content?: string; contentType?: string } | undefined;
-    if (sentBody !== undefined) next.body = graphStoredBody(String(sentBody.content ?? ""));
-    if (sent.attendees !== undefined) next.attendees = sent.attendees;
-    return next;
+    return { id: "AAMkOutlook-forbidden" };
   }
 
   private handleGoogle(call: Recorded, segments: string[], url: URL): unknown {
@@ -118,9 +106,8 @@ export class FakeCalendarWorld {
     const raw = segments[events + 1];
     const id = raw ? decodeURIComponent(raw) : undefined;
 
-    if (id === "watch") return { id: "google-channel-1", resourceId: "google-resource-1", expiration: String(Date.now() + 24 * 60 * 60 * 1000) };
     if (call.method === "GET") {
-      if (id === undefined) return { items: [...this.google.values()], nextSyncToken: `token-${this.syncToken += 1}` };
+      if (id === undefined) return { items: [...this.google.values()] };
       const found = this.google.get(id);
       if (!found) return new Response(JSON.stringify({ error: { message: "Not Found" } }), { status: 404 });
       return found;
