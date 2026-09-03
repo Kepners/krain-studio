@@ -12,9 +12,32 @@ import type { Provider } from "./types";
  */
 
 export const WRITE_WINDOW_MINUTES = 60;
+
+/**
+ * The per-event ceiling is the ping-pong catcher and is deliberately the SAME tight number on both
+ * sides: one meeting being written over and over is the failure that caused the incident.
+ *
+ * The per-provider ceilings are deliberately NOT the same, and this asymmetry is not a mistake to
+ * be tidied up. The reason for a tight hourly ceiling is email, and only Microsoft Graph can send
+ * one. Every Google call carries sendUpdates=none, so a busy hour of Google writes annoys nobody,
+ * while a first migration of a normal calendar would hit a 20/hour Google ceiling immediately and
+ * tempt someone into switching the whole guard off. Raising Graph's 20 is a different matter: that
+ * number is what stands between a loop and a person's inbox.
+ */
 export const WRITES_PER_EVENT_LIMIT = 3;
-export const WRITES_PER_PROVIDER_LIMIT = 20;
+export const GRAPH_WRITES_PER_HOUR = 20;
+export const GOOGLE_WRITES_PER_HOUR = 200;
+
 export const PAUSE_SETTING_KEY = "sync:paused";
+
+/**
+ * The sync ships PAUSED and stays paused until a person clears it by hand.
+ *
+ * An absent setting means paused, not allowed. Code that arrives switched on is one accidental
+ * webhook registration away from emailing a client again, so the safe state is the default state
+ * and re-enabling is a deliberate human act.
+ */
+const NEVER_ENABLED = "never enabled since the 2026-09-03 duplicate-invitation incident: a person must clear this by hand";
 
 export type MailGuardReason =
   | "sync-paused"
@@ -64,27 +87,42 @@ const readableBody = (body: unknown) => {
   catch { return refuse("unreadable-body", "A calendar write was refused: its body is not readable JSON, so it could not be inspected for attendees."); }
 };
 
-export const syncPause = () => {
+export type SyncPause = { reason: string; at: string };
+
+/** Undefined only when a person has explicitly recorded that writes are allowed. Anything else is paused. */
+export const syncPause = (): SyncPause | undefined => {
   const row = calendarDb.getSetting(PAUSE_SETTING_KEY);
-  if (!row) return undefined;
-  try { return JSON.parse(row.value) as { reason: string; at: string }; }
+  if (!row) return { reason: NEVER_ENABLED, at: "" };
+  let record: unknown;
+  try { record = JSON.parse(row.value); }
   catch { return { reason: row.value, at: "" }; }
+  const held = record as { state?: unknown; reason?: unknown; at?: unknown } | null;
+  if (held && held.state === "allowed") return undefined;
+  return { reason: typeof held?.reason === "string" ? held.reason : NEVER_ENABLED, at: typeof held?.at === "string" ? held.at : "" };
 };
 
 export const isSyncPaused = () => Boolean(syncPause());
 
+/** Trips the breaker. Called by the budget only. */
 export const pauseSync = (reason: string) => {
-  calendarDb.setSetting(PAUSE_SETTING_KEY, JSON.stringify({ reason, at: new Date().toISOString() }));
+  calendarDb.setSetting(PAUSE_SETTING_KEY, JSON.stringify({ state: "paused", reason, at: new Date().toISOString() }));
 };
 
-export const resumeSync = () => calendarDb.deleteSetting(PAUSE_SETTING_KEY);
+/**
+ * The ONLY way writes are ever allowed, and nothing in the sync calls it.
+ * It needs a named person so that clearing the pause leaves a trace and cannot happen by accident.
+ */
+export const allowWritesByHand = (clearedBy: string) => {
+  if (!clearedBy.trim()) throw new Error("Clearing the calendar-sync pause needs the name of the person doing it.");
+  calendarDb.setSetting(PAUSE_SETTING_KEY, JSON.stringify({ state: "allowed", clearedBy: clearedBy.trim(), at: new Date().toISOString() }));
+};
 
 const assertNotPaused = () => {
   const paused = syncPause();
   if (paused) refuse("sync-paused", `Calendar sync is paused (${paused.reason}). Clear the "${PAUSE_SETTING_KEY}" setting by hand to allow writes again.`);
 };
 
-const spendWriteBudget = (provider: Provider, eventKey: string) => {
+const spendWriteBudget = (provider: Provider, eventKey: string, providerLimit: number) => {
   const forEvent = calendarDb.countRecentWrites(provider, eventKey, WRITE_WINDOW_MINUTES);
   if (forEvent >= WRITES_PER_EVENT_LIMIT) {
     const reason = `${provider} event ${eventKey} was written ${forEvent} times in ${WRITE_WINDOW_MINUTES} minutes`;
@@ -92,7 +130,7 @@ const spendWriteBudget = (provider: Provider, eventKey: string) => {
     refuse("event-write-budget-exhausted", `Calendar sync stopped and paused itself: ${reason}.`);
   }
   const forProvider = calendarDb.countRecentWrites(provider, undefined, WRITE_WINDOW_MINUTES);
-  if (forProvider >= WRITES_PER_PROVIDER_LIMIT) {
+  if (forProvider >= providerLimit) {
     const reason = `${provider} received ${forProvider} writes in ${WRITE_WINDOW_MINUTES} minutes`;
     pauseSync(reason);
     refuse("provider-write-budget-exhausted", `Calendar sync stopped and paused itself: ${reason}.`);
@@ -121,7 +159,7 @@ export const guardGraphWrite = ({ method, path, body, eventKey, targetAttendeeCo
   if (!Number.isInteger(targetAttendeeCount) || targetAttendeeCount < 0) refuse("unknown-attendee-count", `A ${verb} to ${path} was refused: the caller did not report how many attendees the Outlook event has.`);
   if (targetAttendeeCount > 0) refuse("target-has-attendees", `A ${verb} to ${path} was refused: that Outlook event has ${targetAttendeeCount} attendee(s), and Microsoft emails all of them on any change or cancellation.`);
   if (containsAttendees(readableBody(body))) refuse("attendees-in-body", `A ${verb} to ${path} was refused: the request body carries attendees, and Microsoft would email them.`);
-  spendWriteBudget("microsoft", eventKey);
+  spendWriteBudget("microsoft", eventKey, GRAPH_WRITES_PER_HOUR);
   return mintPermit();
 };
 
@@ -135,6 +173,6 @@ export const guardGoogleWrite = ({ method, path, eventKey }: GoogleWriteRequest)
   const verb = method.toUpperCase();
   if (verb === "GET" || verb === "HEAD") refuse("write-through-read-helper", `guardGoogleWrite was handed a ${verb} for ${path}. Reads must not go through the write guard.`);
   assertNotPaused();
-  spendWriteBudget("google", eventKey);
+  spendWriteBudget("google", eventKey, GOOGLE_WRITES_PER_HOUR);
   return mintPermit();
 };

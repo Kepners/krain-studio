@@ -33,4 +33,7 @@ export type EventLink = {
   outlookHash: string;
   googleHash: string;
   deletedAt: string | null;
+  /** Set when the sync cannot finish this link without emailing someone. A person has to deal with it. */
+  blockedReason: string | null;
+  blockedAt: string | null;
 };

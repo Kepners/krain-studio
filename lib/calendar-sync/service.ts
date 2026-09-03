@@ -1,5 +1,6 @@
 import { calendarDb } from "./db";
 import { eventHash, createGoogleEvent, createGraphEvent, deleteGoogleCalendar, deleteGoogleEvent, deleteGraphEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGoogleCalendarId, getGoogleEvent, getGraphEvent, graphAttendeeCount, listGoogleChanges, listGraphEvents, renewGoogleChannel, renewGraphSubscription, updateGoogleEvent, updateGraphEvent } from "./providers";
+import { syncPause } from "./mail-guard";
 import type { EventLink } from "./types";
 
 let syncTail: Promise<void> = Promise.resolve();
@@ -30,7 +31,7 @@ const usableEvent = (response: unknown, provider: string): Record<string, unknow
 const googleSideHash = (response: unknown) => eventHash(fromGoogle(usableEvent(response, "Google Calendar")));
 const graphSideHash = (response: unknown) => eventHash(fromGraph(usableEvent(response, "Microsoft Graph")));
 
-const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null });
+const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null, blockedReason: null, blockedAt: null });
 
 /** How many attendees the Outlook event currently has, or "missing" if it is gone. */
 const outlookAttendees = async (outlookEventId: string): Promise<number | "missing"> => {
@@ -43,6 +44,7 @@ const outlookAttendees = async (outlookEventId: string): Promise<number | "missi
 
 const mirrorOutlookEvent = async (outlookId: string) => {
   const link = calendarDb.getLinkByOutlook(outlookId);
+  if (link?.blockedReason) return;
   let source: Record<string, unknown>;
   try { source = await getGraphEvent(outlookId) as Record<string, unknown>; }
   catch (error) {
@@ -70,6 +72,7 @@ const mirrorOutlookEvent = async (outlookId: string) => {
 
 const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unknown>) => {
   const link = calendarDb.getLinkByGoogle(googleId);
+  if (link?.blockedReason) return;
   let googleEvent = source;
   try { googleEvent ??= await getGoogleEvent(googleId) as Record<string, unknown>; }
   catch (error) {
@@ -81,8 +84,9 @@ const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unkno
     if (link) {
       const attendees = await outlookAttendees(link.outlookEventId);
       if (attendees === "missing") { calendarDb.markDeleted(link); return; }
-      // Cancelling an Outlook event emails everyone on it. Leave it standing and leave the link alone.
-      if (attendees > 0) return;
+      // Cancelling an Outlook event emails everyone on it. This one can never resolve itself, so it
+      // is parked for a person rather than re-read on every pass for ever.
+      if (attendees > 0) { calendarDb.blockLink(link, `the Google event was cancelled, but the Outlook event has ${attendees} attendee(s) and cancelling it would email them`); return; }
       try { await deleteGraphEvent(link.outlookEventId, attendees); } catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
       calendarDb.markDeleted(link);
     }
@@ -180,11 +184,20 @@ export const finishConnection = async () => {
   await maintainCalendarSync();
 };
 
-export const calendarSyncStatus = () => ({
-  microsoftConnected: Boolean(calendarDb.getToken("microsoft")),
-  googleConnected: Boolean(calendarDb.getToken("google")),
-  googleCalendarId: calendarDb.getSetting("google:calendar_id")?.value ?? null,
-  migratedAt: calendarDb.getSetting("initial_migration_completed")?.value ?? null,
-  googleChannelExpiresAt: calendarDb.getSecretJson<{ expiration: number }>("google:channel")?.expiration ?? null,
-  microsoftSubscriptionExpiresAt: calendarDb.getSecretJson<{ expiration: number }>("microsoft:subscription")?.expiration ?? null,
-});
+/** Links the sync will not finish on its own, with the reason, so a person can see them. */
+const blocked = () => calendarDb.listBlockedLinks().map(link => ({ outlookEventId: link.outlookEventId, googleEventId: link.googleEventId, reason: link.blockedReason ?? "", since: link.blockedAt ?? "" }));
+
+export const calendarSyncStatus = () => {
+  const needsAPerson = blocked();
+  return {
+    microsoftConnected: Boolean(calendarDb.getToken("microsoft")),
+    googleConnected: Boolean(calendarDb.getToken("google")),
+    googleCalendarId: calendarDb.getSetting("google:calendar_id")?.value ?? null,
+    migratedAt: calendarDb.getSetting("initial_migration_completed")?.value ?? null,
+    googleChannelExpiresAt: calendarDb.getSecretJson<{ expiration: number }>("google:channel")?.expiration ?? null,
+    microsoftSubscriptionExpiresAt: calendarDb.getSecretJson<{ expiration: number }>("microsoft:subscription")?.expiration ?? null,
+    writesPaused: syncPause() ?? null,
+    needsAPersonCount: needsAPerson.length,
+    needsAPerson,
+  };
+};

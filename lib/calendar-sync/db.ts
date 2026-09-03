@@ -7,6 +7,12 @@ import type { EventLink, OAuthToken, Provider } from "./types";
 
 let database: Database.Database | undefined;
 
+/** Adds a column to an existing database that was created before that column existed. */
+const addColumn = (instance: Database.Database, table: string, column: string, definition: string) => {
+  const columns = instance.prepare(`PRAGMA table_info(${table})`).all() as { name: string }[];
+  if (!columns.some(item => item.name === column)) instance.exec(`ALTER TABLE ${table} ADD COLUMN ${definition}`);
+};
+
 const db = () => {
   if (database) return database;
   const dbPath = calendarEnv.dbPath();
@@ -42,6 +48,8 @@ const db = () => {
     );
     CREATE INDEX IF NOT EXISTS write_audit_recent ON write_audit(provider, event_id, written_at);
   `);
+  addColumn(database, "event_links", "blocked_reason", "blocked_reason TEXT");
+  addColumn(database, "event_links", "blocked_at", "blocked_at TEXT");
   return database;
 };
 
@@ -64,20 +72,26 @@ export const setSecretJson = (key: string, value: unknown) => setSetting(key, se
 export const getToken = (provider: Provider) => getSecretJson<OAuthToken>(`${provider}:token`);
 export const setToken = (provider: Provider, token: OAuthToken) => setSecretJson(`${provider}:token`, token);
 
-const eventLinkFields = "outlook_event_id AS outlookEventId, google_event_id AS googleEventId, outlook_hash AS outlookHash, google_hash AS googleHash, deleted_at AS deletedAt";
+const eventLinkFields = "outlook_event_id AS outlookEventId, google_event_id AS googleEventId, outlook_hash AS outlookHash, google_hash AS googleHash, deleted_at AS deletedAt, blocked_reason AS blockedReason, blocked_at AS blockedAt";
 
 export const getLinkByOutlook = (outlookEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE outlook_event_id = ?`).get(outlookEventId) as EventLink | undefined;
 export const getLinkByGoogle = (googleEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE google_event_id = ?`).get(googleEventId) as EventLink | undefined;
 
 export const saveLink = (link: EventLink) => {
-  db().prepare(`INSERT INTO event_links(outlook_event_id, google_event_id, outlook_hash, google_hash, deleted_at, updated_at)
-    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+  db().prepare(`INSERT INTO event_links(outlook_event_id, google_event_id, outlook_hash, google_hash, deleted_at, blocked_reason, blocked_at, updated_at)
+    VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     ON CONFLICT(outlook_event_id) DO UPDATE SET google_event_id = excluded.google_event_id,
       outlook_hash = excluded.outlook_hash, google_hash = excluded.google_hash,
-      deleted_at = excluded.deleted_at, updated_at = CURRENT_TIMESTAMP`).run(link.outlookEventId, link.googleEventId, link.outlookHash, link.googleHash, link.deletedAt);
+      deleted_at = excluded.deleted_at, blocked_reason = excluded.blocked_reason,
+      blocked_at = excluded.blocked_at, updated_at = CURRENT_TIMESTAMP`).run(link.outlookEventId, link.googleEventId, link.outlookHash, link.googleHash, link.deletedAt, link.blockedReason ?? null, link.blockedAt ?? null);
 };
 
 export const markDeleted = (link: EventLink) => saveLink({ ...link, deletedAt: new Date().toISOString() });
+
+/** Parks a link that cannot be finished without emailing someone, so later passes skip it instead of re-reading it forever. */
+export const blockLink = (link: EventLink, reason: string) => saveLink({ ...link, blockedReason: reason, blockedAt: new Date().toISOString() });
+
+export const listBlockedLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE blocked_reason IS NOT NULL AND deleted_at IS NULL`).all() as EventLink[];
 export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
 export const clearEventLinks = () => db().prepare("DELETE FROM event_links").run();
 
@@ -102,4 +116,4 @@ export const acceptNotification = (provider: Provider, notificationId: string) =
   }
 };
 
-export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification, recordWrite, countRecentWrites, listRecentWrites };
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification, recordWrite, countRecentWrites, listRecentWrites, blockLink, listBlockedLinks };
