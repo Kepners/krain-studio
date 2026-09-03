@@ -75,7 +75,6 @@ export const setToken = (provider: Provider, token: OAuthToken) => setSecretJson
 const eventLinkFields = "outlook_event_id AS outlookEventId, google_event_id AS googleEventId, outlook_hash AS outlookHash, google_hash AS googleHash, deleted_at AS deletedAt, blocked_reason AS blockedReason, blocked_at AS blockedAt";
 
 export const getLinkByOutlook = (outlookEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE outlook_event_id = ?`).get(outlookEventId) as EventLink | undefined;
-export const getLinkByGoogle = (googleEventId: string) => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE google_event_id = ?`).get(googleEventId) as EventLink | undefined;
 
 export const saveLink = (link: EventLink) => {
   db().prepare(`INSERT INTO event_links(outlook_event_id, google_event_id, outlook_hash, google_hash, deleted_at, blocked_reason, blocked_at, updated_at)
@@ -93,7 +92,6 @@ export const blockLink = (link: EventLink, reason: string) => saveLink({ ...link
 
 export const listBlockedLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE blocked_reason IS NOT NULL AND deleted_at IS NULL`).all() as EventLink[];
 export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
-export const clearEventLinks = () => db().prepare("DELETE FROM event_links").run();
 
 export const recordWrite = (provider: Provider, eventId: string) => db().prepare("INSERT INTO write_audit(provider, event_id) VALUES (?, ?)").run(provider, eventId);
 
@@ -105,15 +103,6 @@ export const countRecentWrites = (provider: Provider, eventId: string | undefine
   return row.total;
 };
 
-export const listRecentWrites = (provider: Provider, minutes: number) => db().prepare("SELECT provider, event_id AS eventId, written_at AS writtenAt FROM write_audit WHERE provider = ? AND written_at >= datetime('now', ?) ORDER BY written_at DESC").all(provider, `-${Math.max(0, Math.trunc(minutes))} minutes`) as { provider: Provider; eventId: string; writtenAt: string }[];
 
-export const acceptNotification = (provider: Provider, notificationId: string) => {
-  try {
-    db().prepare("INSERT INTO received_notifications(provider, notification_id) VALUES (?, ?)").run(provider, notificationId);
-    return true;
-  } catch {
-    return false;
-  }
-};
 
-export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification, recordWrite, countRecentWrites, listRecentWrites, blockLink, listBlockedLinks };
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, saveLink, markDeleted, listActiveLinks, recordWrite, countRecentWrites, blockLink, listBlockedLinks };

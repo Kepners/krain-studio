@@ -2,30 +2,28 @@ import { calendarDb } from "./db";
 import type { Provider } from "./types";
 
 /**
- * The one door every calendar write goes through.
+ * The door every calendar write goes through.
  *
- * Microsoft Graph emails the attendees of an event whenever that event is created, changed or
- * deleted, and it has no "do not notify" parameter. The only safe rule is therefore: never write
- * attendee-bearing data, and never write to an attendee-bearing event at all. Google is safe
- * because every Google call already carries sendUpdates=none, but Google writes still spend the
- * write budget so a runaway loop cannot run forever on either side.
+ * Since 2026-09-03 this sync is ONE WAY: Outlook is read, Google is written. There is no Microsoft
+ * Graph write path left in the repo at all, so the promise "this sync cannot email anybody" no
+ * longer rests on a guard holding. Graph cannot be written to, so Graph cannot send an invitation.
+ *
+ * What remains here protects the Google mirror. Google never notifies anyone (every call carries
+ * sendUpdates=none and the mirror carries no guest list), but a loop that rewrites the same event
+ * for ever is still a fault worth stopping, so the budget and the pause stay.
  */
 
 export const WRITE_WINDOW_MINUTES = 60;
 
 /**
- * The per-event ceiling is the ping-pong catcher and is deliberately the SAME tight number on both
- * sides: one meeting being written over and over is the failure that caused the incident.
+ * The per-event ceiling is the ping-pong catcher: one meeting written over and over is the failure
+ * that caused the incident, and 3 in an hour is already abnormal.
  *
- * The per-provider ceilings are deliberately NOT the same, and this asymmetry is not a mistake to
- * be tidied up. The reason for a tight hourly ceiling is email, and only Microsoft Graph can send
- * one. Every Google call carries sendUpdates=none, so a busy hour of Google writes annoys nobody,
- * while a first migration of a normal calendar would hit a 20/hour Google ceiling immediately and
- * tempt someone into switching the whole guard off. Raising Graph's 20 is a different matter: that
- * number is what stands between a loop and a person's inbox.
+ * The hourly total is deliberately generous by comparison. Nobody is emailed by a Google write, and
+ * a first migration of a normal diary would trip a tight ceiling immediately and tempt someone into
+ * switching the whole guard off. A guard people want to disable protects nothing.
  */
 export const WRITES_PER_EVENT_LIMIT = 3;
-export const GRAPH_WRITES_PER_HOUR = 20;
 export const GOOGLE_WRITES_PER_HOUR = 200;
 
 export const PAUSE_SETTING_KEY = "sync:paused";
@@ -33,21 +31,17 @@ export const PAUSE_SETTING_KEY = "sync:paused";
 /**
  * The sync ships PAUSED and stays paused until a person clears it by hand.
  *
- * An absent setting means paused, not allowed. Code that arrives switched on is one accidental
- * webhook registration away from emailing a client again, so the safe state is the default state
- * and re-enabling is a deliberate human act.
+ * An absent setting means paused, not allowed. The safe state is the default state, and switching
+ * it on is a deliberate act by a named person.
  */
-const NEVER_ENABLED = "never enabled since the 2026-09-03 duplicate-invitation incident: a person must clear this by hand";
+const NEVER_ENABLED = "never enabled since the 2026-09-03 duplicate-invitation incident: a person must switch it on by hand";
 
 export type MailGuardReason =
   | "sync-paused"
-  | "attendees-in-body"
-  | "target-has-attendees"
-  | "unknown-attendee-count"
-  | "unreadable-body"
   | "event-write-budget-exhausted"
   | "provider-write-budget-exhausted"
-  | "write-through-read-helper";
+  | "write-through-read-helper"
+  | "forged-permit";
 
 export class CalendarMailGuardError extends Error {
   readonly reason: MailGuardReason;
@@ -61,31 +55,29 @@ export class CalendarMailGuardError extends Error {
 const refuse = (reason: MailGuardReason, message: string): never => { throw new CalendarMailGuardError(reason, message); };
 
 /**
- * A permit is the receipt for a passed guard check, and only this module can mint one.
- * The transport refuses any non-GET without a permit, so a future call site cannot reach
- * Microsoft or Google with a write by forgetting to ask.
+ * A permit is the receipt for a guard check that actually ran, and identity is by PROVENANCE.
+ *
+ * The first version asked a permit whether it carried a private symbol. That is duck-typing, and it
+ * was defeated two ways: any guard's permit satisfied any other guard's transport, and a Proxy
+ * answering "yes" forged one outright. This register only contains objects this module handed out,
+ * and it records WHICH provider each was minted for. An object that was never minted here is not in
+ * the register, no matter what it claims about itself, and a permit for one provider is not a
+ * permit for another.
  */
-const permitMark: unique symbol = Symbol("calendar-write-permit");
-export type WritePermit = { readonly [permitMark]: true };
-const mintPermit = (): WritePermit => ({ [permitMark]: true });
-export const isWritePermit = (value: unknown): value is WritePermit => typeof value === "object" && value !== null && (value as Record<symbol, unknown>)[permitMark] === true;
+const issuedPermits = new WeakMap<object, Provider>();
 
-const hasAttendeeValue = (value: unknown) => !(value === undefined || (Array.isArray(value) && value.length === 0));
+declare const permitBrand: unique symbol;
+export type WritePermit = { readonly [permitBrand]: true };
 
-const containsAttendees = (value: unknown, depth = 0): boolean => {
-  if (depth > 12 || value === null || typeof value !== "object") return false;
-  if (Array.isArray(value)) return value.some(item => containsAttendees(item, depth + 1));
-  const record = value as Record<string, unknown>;
-  if (Object.prototype.hasOwnProperty.call(record, "attendees") && hasAttendeeValue(record.attendees)) return true;
-  return Object.values(record).some(item => containsAttendees(item, depth + 1));
+const mintPermit = (provider: Provider): WritePermit => {
+  const permit = Object.freeze({}) as WritePermit;
+  issuedPermits.set(permit, provider);
+  return permit;
 };
 
-const readableBody = (body: unknown) => {
-  if (body === undefined || body === null) return undefined;
-  if (typeof body !== "string") return refuse("unreadable-body", "A calendar write was refused: its body could not be inspected for attendees.");
-  try { return JSON.parse(body) as unknown; }
-  catch { return refuse("unreadable-body", "A calendar write was refused: its body is not readable JSON, so it could not be inspected for attendees."); }
-};
+/** True only for a permit this module minted, for this exact provider. */
+export const isWritePermitFor = (provider: Provider, value: unknown): value is WritePermit =>
+  typeof value === "object" && value !== null && issuedPermits.get(value as object) === provider;
 
 export type SyncPause = { reason: string; at: string };
 
@@ -103,23 +95,23 @@ export const syncPause = (): SyncPause | undefined => {
 
 export const isSyncPaused = () => Boolean(syncPause());
 
-/** Trips the breaker. Called by the budget only. */
+/** Stops the sync. Called by the breaker, and by a person switching it off. */
 export const pauseSync = (reason: string) => {
   calendarDb.setSetting(PAUSE_SETTING_KEY, JSON.stringify({ state: "paused", reason, at: new Date().toISOString() }));
 };
 
 /**
- * The ONLY way writes are ever allowed, and nothing in the sync calls it.
- * It needs a named person so that clearing the pause leaves a trace and cannot happen by accident.
+ * The ONLY way writes are ever allowed, and nothing in the sync itself calls it.
+ * It needs a named person so that switching the sync on leaves a trace and cannot happen by accident.
  */
 export const allowWritesByHand = (clearedBy: string) => {
-  if (!clearedBy.trim()) throw new Error("Clearing the calendar-sync pause needs the name of the person doing it.");
+  if (!clearedBy.trim()) throw new Error("Switching the calendar sync on needs the name of the person doing it.");
   calendarDb.setSetting(PAUSE_SETTING_KEY, JSON.stringify({ state: "allowed", clearedBy: clearedBy.trim(), at: new Date().toISOString() }));
 };
 
 const assertNotPaused = () => {
   const paused = syncPause();
-  if (paused) refuse("sync-paused", `Calendar sync is paused (${paused.reason}). Clear the "${PAUSE_SETTING_KEY}" setting by hand to allow writes again.`);
+  if (paused) refuse("sync-paused", `Calendar sync is switched off (${paused.reason}). Switch it on from the calendar setup page to allow writes again.`);
 };
 
 const spendWriteBudget = (provider: Provider, eventKey: string, providerLimit: number) => {
@@ -127,52 +119,24 @@ const spendWriteBudget = (provider: Provider, eventKey: string, providerLimit: n
   if (forEvent >= WRITES_PER_EVENT_LIMIT) {
     const reason = `${provider} event ${eventKey} was written ${forEvent} times in ${WRITE_WINDOW_MINUTES} minutes`;
     pauseSync(reason);
-    refuse("event-write-budget-exhausted", `Calendar sync stopped and paused itself: ${reason}.`);
+    refuse("event-write-budget-exhausted", `Calendar sync stopped and switched itself off: ${reason}.`);
   }
   const forProvider = calendarDb.countRecentWrites(provider, undefined, WRITE_WINDOW_MINUTES);
   if (forProvider >= providerLimit) {
     const reason = `${provider} received ${forProvider} writes in ${WRITE_WINDOW_MINUTES} minutes`;
     pauseSync(reason);
-    refuse("provider-write-budget-exhausted", `Calendar sync stopped and paused itself: ${reason}.`);
+    refuse("provider-write-budget-exhausted", `Calendar sync stopped and switched itself off: ${reason}.`);
   }
   calendarDb.recordWrite(provider, eventKey);
 };
 
-export type GraphWriteRequest = {
-  method: string;
-  path: string;
-  body?: unknown;
-  /** A stable per-event key, used for the write budget. */
-  eventKey: string;
-  /** Attendees the caller read on the target Outlook event. 0 for an event that does not exist yet. */
-  targetAttendeeCount: number;
-};
-
-/**
- * Refuses any Microsoft Graph write that could make Microsoft email a human being.
- * Reads (GET) never come here: they cost nothing and send nothing.
- */
-export const guardGraphWrite = ({ method, path, body, eventKey, targetAttendeeCount }: GraphWriteRequest) => {
-  const verb = method.toUpperCase();
-  if (verb === "GET" || verb === "HEAD") refuse("write-through-read-helper", `guardGraphWrite was handed a ${verb} for ${path}. Reads must not go through the write guard.`);
-  assertNotPaused();
-  if (!Number.isInteger(targetAttendeeCount) || targetAttendeeCount < 0) refuse("unknown-attendee-count", `A ${verb} to ${path} was refused: the caller did not report how many attendees the Outlook event has.`);
-  if (targetAttendeeCount > 0) refuse("target-has-attendees", `A ${verb} to ${path} was refused: that Outlook event has ${targetAttendeeCount} attendee(s), and Microsoft emails all of them on any change or cancellation.`);
-  if (containsAttendees(readableBody(body))) refuse("attendees-in-body", `A ${verb} to ${path} was refused: the request body carries attendees, and Microsoft would email them.`);
-  spendWriteBudget("microsoft", eventKey, GRAPH_WRITES_PER_HOUR);
-  return mintPermit();
-};
-
 export type GoogleWriteRequest = { method: string; path: string; eventKey: string };
 
-/**
- * Google never emails anyone here (every call carries sendUpdates=none), so there is no attendee
- * check. The budget still applies, so a loop on the Google side cannot run away either.
- */
+/** Refuses a Google write when the sync is switched off or the same event is being rewritten in a loop. */
 export const guardGoogleWrite = ({ method, path, eventKey }: GoogleWriteRequest) => {
   const verb = method.toUpperCase();
   if (verb === "GET" || verb === "HEAD") refuse("write-through-read-helper", `guardGoogleWrite was handed a ${verb} for ${path}. Reads must not go through the write guard.`);
   assertNotPaused();
   spendWriteBudget("google", eventKey, GOOGLE_WRITES_PER_HOUR);
-  return mintPermit();
+  return mintPermit("google");
 };

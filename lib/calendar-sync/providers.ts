@@ -1,8 +1,7 @@
-import crypto from "node:crypto";
 import { calendarDb } from "./db";
 import { hash, randomSecret } from "./crypto";
 import { calendarEnv } from "./env";
-import { CalendarMailGuardError, guardGoogleWrite, guardGraphWrite, isWritePermit } from "./mail-guard";
+import { CalendarMailGuardError, guardGoogleWrite, isWritePermitFor } from "./mail-guard";
 import type { WritePermit } from "./mail-guard";
 import type { CalendarAttendee, CalendarDateTime, NormalizedEvent, OAuthToken, Provider } from "./types";
 
@@ -21,41 +20,83 @@ const decodeEntities = (value: string) => value
   .replace(/&gt;/gi, ">")
   .replace(/&amp;/gi, "&");
 
-/**
- * Strips tags and decodes HTML entities, repeatedly, until the text stops changing.
- *
- * Microsoft Graph re-escapes a description every time it stores one, so a body that survives a
- * round trip gains an extra "amp;" per pass (&nbsp; -> &amp;nbsp; -> &amp;amp;nbsp;). Collapsing
- * that back to plain text is what makes the round trip idempotent: the same meeting hashes the
- * same on both sides, so neither side sees a change worth writing.
- */
-const cleanHtml = (value = "") => {
+/** Decodes HTML entities over and over until the text stops changing, so "&amp;amp;nbsp;" collapses to a space. */
+const decodeFully = (value: string) => {
   let current = value;
   for (let pass = 0; pass < 12; pass += 1) {
-    const next = decodeEntities(current.replace(/<[^>]*>/g, " "));
+    const next = decodeEntities(current);
     if (next === current) break;
     current = next;
   }
-  return current.replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim();
+  return current;
 };
 
+/**
+ * Turns Microsoft's HTML body into plain text.
+ *
+ * Tags are stripped ONCE, and only from the original HTML. Decoding never feeds back into another
+ * strip, because an earlier version looped the two together and ate text a person had typed:
+ * "Print at &lt;A3&gt;" decoded to "Print at <A3>" and the next turn of the loop deleted "<A3>" as
+ * if it were markup. Strip first, decode second, stop.
+ */
+const cleanHtml = (value = "") => decodeFully(value.replace(/<[^>]*>/g, " ")).replace(/\s+/g, " ").trim();
+
 export const normalizeDescription = cleanHtml;
+
+/**
+ * The text form used for COMPARING, on both sides of the mirror.
+ *
+ * It decodes and tidies spacing but never strips anything, so it is safe to apply to text that has
+ * already been cleaned. Graph re-escapes a description every time it stores one, and Google escapes
+ * on its own terms; decoding to a fixed point means those escaping differences can never look like
+ * somebody edited the meeting.
+ */
+const normaliseText = (value: string) => decodeFully(value).replace(/\s+/g, " ").trim();
 const isoToUtc = (value: string) => new Date(value).toISOString();
-const utcDateTime = (value: string) => ({ dateTime: isoToUtc(value).replace(".000Z", ""), timeZone: "UTC" });
 const calendarDateTime = (value: { date?: string; dateTime?: string }): CalendarDateTime =>
   value.date ? { kind: "date", value: value.date } : { kind: "dateTime", value: isoToUtc(value.dateTime ?? "") };
 
-const dateForGraph = (value: CalendarDateTime) => value.kind === "date" ? { dateTime: `${value.value}T00:00:00`, timeZone: "UTC" } : utcDateTime(value.value);
 const dateForGoogle = (value: CalendarDateTime) => value.kind === "date" ? { date: value.value } : { dateTime: value.value, timeZone: "UTC" };
 
-const common = (event: Omit<NormalizedEvent, "id">) => ({
-  title: event.title.trim(), description: cleanHtml(event.description), location: event.location.trim(),
-  start: event.start, end: event.end,
-  attendees: [...event.attendees].map(({ email, name }) => ({ email: email.toLowerCase(), name: name ?? "" })).sort((a, b) => a.email.localeCompare(b.email)),
+/**
+ * The Google mirror carries NO guest list and NO email addresses.
+ *
+ * Google is given names as ordinary words inside the description, so the diary still reads
+ * properly, and Google is left with nobody it could ever notify. A name that looks like an email
+ * address is not written at all: Outlook often fills a missing display name with the address
+ * itself, and that is exactly the thing that must not reach the mirror.
+ */
+const looksLikeAnEmailAddress = (value: string) => value.includes("@");
+
+const attendeeLine = (attendees: CalendarAttendee[]) => {
+  if (!attendees.length) return "";
+  const names = attendees.map(item => (item.name ?? "").trim()).filter(name => name && !looksLikeAnEmailAddress(name)).sort((a, b) => a.localeCompare(b));
+  const unnamed = attendees.length - names.length;
+  const extra = unnamed ? `${names.length ? " and " : ""}${unnamed} more` : "";
+  return `With: ${names.join(", ")}${extra}`;
+};
+
+/** The text actually mirrored into Google: the Outlook description, plus who is on the meeting. */
+const mirroredDescription = (event: Omit<NormalizedEvent, "id">) => [event.description.trim(), attendeeLine(event.attendees)].filter(Boolean).join("\n\n");
+
+/**
+ * ONE projection, applied to both sides, so the two hashes are comparable by construction.
+ *
+ * Attendees are not a field here. They live inside the description text, which is the only place
+ * the mirror carries them, so an Outlook event and the Google copy of it reduce to the same words.
+ * Reading the Google copy back and projecting it gives the description it already holds, plus an
+ * empty attendee line, which is the same string the Outlook side produces.
+ */
+const projection = (event: Omit<NormalizedEvent, "id">) => ({
+  title: event.title.trim(),
+  description: normaliseText(mirroredDescription(event)),
+  location: normaliseText(event.location),
+  start: event.start,
+  end: event.end,
   recurrence: [...event.recurrence].sort(),
 });
 
-export const eventHash = (event: Omit<NormalizedEvent, "id">) => hash(common(event));
+export const eventHash = (event: Omit<NormalizedEvent, "id">) => hash(projection(event));
 
 const googleResponse = async (response: Response) => {
   if (response.ok) return response.status === 204 ? undefined : response.json();
@@ -126,34 +167,33 @@ export const exchangeAuthorizationCode = async (provider: Provider, code: string
   calendarDb.setSetting(`${provider}:connected_at`, new Date().toISOString());
 };
 
-/** No request leaves this file without passing here, and a non-GET needs a permit the mail guard alone can mint. */
-const permitted = (provider: Provider, path: string, init: RequestInit, permit?: WritePermit) => {
-  const verb = (init.method ?? "GET").toUpperCase();
-  if (verb !== "GET" && !isWritePermit(permit)) throw new CalendarMailGuardError("write-through-read-helper", `A ${verb} to ${provider} ${path} was blocked: it carried no mail-guard permit. Every write must go through the mail guard.`);
-};
+/**
+ * The Microsoft Graph transport. It takes a path and NOTHING ELSE.
+ *
+ * There is no method parameter, no request-init parameter, and no Graph write helper anywhere in
+ * this repo, so no caller can turn this into a POST, PATCH, PUT or DELETE however hard it tries.
+ * That is the whole safety argument since the sync went one way on 2026-09-03: Microsoft is read
+ * and never written, so Microsoft is never given anything to email a client about.
+ */
+const graphFetch = async (path: string) => graphResponse(await fetch(path.startsWith("http") ? path : `${graphRoot}${path}`, {
+  headers: { authorization: `Bearer ${await accessToken("microsoft")}`, "content-type": "application/json", Prefer: 'outlook.timezone="UTC"' },
+}));
 
-const graphFetch = async (path: string, init: RequestInit, permit?: WritePermit) => {
-  permitted("microsoft", path, init, permit);
-  return graphResponse(await fetch(path.startsWith("http") ? path : `${graphRoot}${path}`, {
-    ...init, headers: { authorization: `Bearer ${await accessToken("microsoft")}`, "content-type": "application/json", Prefer: 'outlook.timezone="UTC"', ...(init.headers ?? {}) },
-  }));
-};
+/** Reading Outlook. The only thing this repo does to Microsoft. */
+const graph = (path: string) => graphFetch(path);
 
+/** A non-GET to Google needs a permit minted by GOOGLE's own guard. Nothing else is accepted. */
 const googleFetch = async (path: string, init: RequestInit, permit?: WritePermit) => {
-  permitted("google", path, init, permit);
+  const verb = (init.method ?? "GET").toUpperCase();
+  if (verb !== "GET" && !isWritePermitFor("google", permit)) throw new CalendarMailGuardError("forged-permit", `A ${verb} to google ${path} was blocked: it carried no permit minted by the Google guard.`);
   return googleResponse(await fetch(path.startsWith("http") ? path : `${googleRoot}${path}`, {
     ...init, headers: { authorization: `Bearer ${await accessToken("google")}`, "content-type": "application/json", ...(init.headers ?? {}) },
   }));
 };
 
-const graph = (path: string, init: RequestInit = {}) => graphFetch(path, init);
 const google = (path: string, init: RequestInit = {}) => googleFetch(path, init);
 
 type WriteMethod = "POST" | "PATCH" | "PUT" | "DELETE";
-
-/** The only way anything in this codebase writes to Microsoft Graph. */
-const graphWrite = (write: { method: WriteMethod; path: string; body?: string; eventKey: string; targetAttendeeCount: number }) =>
-  graphFetch(write.path, { method: write.method, ...(write.body === undefined ? {} : { body: write.body }) }, guardGraphWrite({ method: write.method, path: write.path, body: write.body, eventKey: write.eventKey, targetAttendeeCount: write.targetAttendeeCount }));
 
 /** The only way anything in this codebase writes to Google Calendar. */
 const googleWrite = (write: { method: WriteMethod; path: string; body?: string; eventKey: string }) =>
@@ -177,25 +217,6 @@ const graphRecurrenceToGoogle = (recurrence?: { pattern?: Record<string, unknown
   return [`RRULE:${parts.join(";")}`];
 };
 
-const googleRecurrenceToGraph = (rules: string[], start: CalendarDateTime) => {
-  const rule = rules.find(value => value.startsWith("RRULE:"));
-  if (!rule) return undefined;
-  const values = Object.fromEntries(rule.slice(6).split(";").map(part => part.split("=", 2))) as Record<string, string>;
-  const freq = values.FREQ;
-  const type = freq === "YEARLY" ? "absoluteYearly" : freq === "MONTHLY" ? (values.BYDAY ? "relativeMonthly" : "absoluteMonthly") : freq === "WEEKLY" ? "weekly" : freq === "DAILY" ? "daily" : undefined;
-  if (!type) return undefined;
-  const dayMap: Record<string, string> = { SU: "sunday", MO: "monday", TU: "tuesday", WE: "wednesday", TH: "thursday", FR: "friday", SA: "saturday" };
-  const startDate = start.value.slice(0, 10);
-  const pattern: Record<string, unknown> = { type, interval: Number(values.INTERVAL || 1) };
-  if (values.BYDAY) pattern.daysOfWeek = values.BYDAY.split(",").map(day => dayMap[day]).filter(Boolean);
-  if (values.BYMONTHDAY) pattern.dayOfMonth = Number(values.BYMONTHDAY);
-  if (values.BYMONTH) pattern.month = Number(values.BYMONTH);
-  const range: Record<string, unknown> = { type: "noEnd", startDate };
-  if (values.COUNT) { range.type = "numbered"; range.numberOfOccurrences = Number(values.COUNT); }
-  if (values.UNTIL) { range.type = "endDate"; range.endDate = values.UNTIL.slice(0, 8).replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3"); }
-  return { pattern, range };
-};
-
 const attendeeStatus = (value: unknown): CalendarAttendee["responseStatus"] =>
   value === "accepted" || value === "declined" || value === "tentative" || value === "needsAction" ? value : undefined;
 
@@ -213,10 +234,7 @@ export const fromGraph = (event: Record<string, unknown>): NormalizedEvent => ({
   recurrence: graphRecurrenceToGoogle(event.recurrence as { pattern?: Record<string, unknown>; range?: Record<string, unknown> } | undefined),
 });
 
-const googleBody = (event: NormalizedEvent, outlookId: string) => ({ summary: `KS - ${event.title}`, description: event.description, location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), attendees: event.attendees.map(item => ({ email: item.email, displayName: item.name })), recurrence: event.recurrence, colorId: "6", extendedProperties: { private: { krainSyncOutlookEventId: outlookId, krainSyncVersion: "1" } } });
-/** Never carries attendees. Microsoft emails every attendee on the body it is given, so the body must not name one. */
-const graphBody = (event: NormalizedEvent, googleId: string, includeExtension: boolean) => ({ subject: event.title, body: { contentType: "text", content: event.description }, location: { displayName: event.location }, start: dateForGraph(event.start), end: dateForGraph(event.end), isAllDay: event.start.kind === "date", recurrence: googleRecurrenceToGraph(event.recurrence, event.start), ...(includeExtension ? { extensions: [{ "@odata.type": "microsoft.graph.openTypeExtension", extensionName: "com.krain.calendarSync", googleEventId: googleId, version: "1" }] } : {}) });
-
+const googleBody = (event: NormalizedEvent, outlookId: string) => ({ summary: `KS - ${event.title}`, description: mirroredDescription(event), location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), recurrence: event.recurrence, colorId: "6", extendedProperties: { private: { krainSyncOutlookEventId: outlookId, krainSyncVersion: "1" } } });
 const graphEventsPath = () => calendarEnv.microsoftCalendarId() === "primary" ? "/me/events" : `/me/calendars/${encodeURIComponent(calendarEnv.microsoftCalendarId())}/events`;
 
 export const getGoogleCalendarId = () => calendarDb.getSetting("google:calendar_id")?.value;
@@ -228,15 +246,9 @@ export const ensureGoogleCalendar = async () => {
 };
 
 export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`);
-export const getGoogleEvent = (eventId: string) => google(`/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}`);
 export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: `outlook:${outlookId}` });
 export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: eventId });
 export const deleteGoogleEvent = (eventId: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, eventKey: eventId });
-export const deleteGoogleCalendar = (calendarId: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(calendarId)}`, eventKey: `calendar:${calendarId}` });
-export const createGraphEvent = (event: NormalizedEvent, googleId: string) => graphWrite({ method: "POST", path: graphEventsPath(), body: JSON.stringify(graphBody(event, googleId, true)), eventKey: `google:${googleId}`, targetAttendeeCount: 0 });
-export const updateGraphEvent = (eventId: string, event: NormalizedEvent, googleId: string, targetAttendeeCount: number) => graphWrite({ method: "PATCH", path: `${graphEventsPath()}/${encodeURIComponent(eventId)}`, body: JSON.stringify(graphBody(event, googleId, false)), eventKey: eventId, targetAttendeeCount });
-export const deleteGraphEvent = (eventId: string, targetAttendeeCount: number) => graphWrite({ method: "DELETE", path: `${graphEventsPath()}/${encodeURIComponent(eventId)}`, eventKey: eventId, targetAttendeeCount });
-export const graphAttendeeCount = (event: Record<string, unknown>) => (Array.isArray(event.attendees) ? event.attendees.length : 0);
 
 export const listGraphEvents = async () => {
   const results: Record<string, unknown>[] = [];
@@ -247,40 +259,4 @@ export const listGraphEvents = async () => {
     page = response["@odata.nextLink"];
   }
   return results;
-};
-
-export const listGoogleChanges = async (syncToken?: string) => {
-  const results: Record<string, unknown>[] = [];
-  let page: string | undefined = `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?showDeleted=true&maxResults=250${syncToken ? `&syncToken=${encodeURIComponent(syncToken)}` : ""}`;
-  let nextSyncToken: string | undefined;
-  while (page) {
-    const response = await google(page) as { items?: Record<string, unknown>[]; nextPageToken?: string; nextSyncToken?: string };
-    results.push(...(response.items ?? []));
-    nextSyncToken = response.nextSyncToken ?? nextSyncToken;
-    page = response.nextPageToken ? `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?showDeleted=true&maxResults=250${syncToken ? `&syncToken=${encodeURIComponent(syncToken)}` : ""}&pageToken=${encodeURIComponent(response.nextPageToken)}` : undefined;
-  }
-  return { results, nextSyncToken };
-};
-
-export const renewGraphSubscription = async () => {
-  const current = calendarDb.getSecretJson<{ id: string; clientState: string; expiration: number }>("microsoft:subscription");
-  const expiration = new Date(Date.now() + 6 * 24 * 60 * 60 * 1000).toISOString();
-  if (current && current.expiration > Date.now() + 2 * 24 * 60 * 60 * 1000) return;
-  if (current) {
-    const renewed = await graphWrite({ method: "PATCH", path: `/subscriptions/${current.id}`, body: JSON.stringify({ expirationDateTime: expiration }), eventKey: `subscription:${current.id}`, targetAttendeeCount: 0 }) as { expirationDateTime: string };
-    calendarDb.setSecretJson("microsoft:subscription", { ...current, expiration: Date.parse(renewed.expirationDateTime) });
-    return;
-  }
-  const clientState = randomSecret();
-  const resource = calendarEnv.microsoftCalendarId() === "primary" ? "me/events" : `me/calendars/${encodeURIComponent(calendarEnv.microsoftCalendarId())}/events`;
-  const created = await graphWrite({ method: "POST", path: "/subscriptions", body: JSON.stringify({ changeType: "created,updated,deleted", notificationUrl: `${calendarEnv.publicUrl()}/api/calendar-sync/graph`, lifecycleNotificationUrl: `${calendarEnv.publicUrl()}/api/calendar-sync/graph`, resource, expirationDateTime: expiration, clientState, latestSupportedTlsVersion: "v1_2" }), eventKey: "subscription:new", targetAttendeeCount: 0 }) as { id: string; expirationDateTime: string };
-  calendarDb.setSecretJson("microsoft:subscription", { id: created.id, clientState, expiration: Date.parse(created.expirationDateTime) });
-};
-
-export const renewGoogleChannel = async () => {
-  const current = calendarDb.getSecretJson<{ id: string; resourceId: string; expiration: number }>("google:channel");
-  if (current && current.expiration > Date.now() + 24 * 60 * 60 * 1000) return;
-  const id = crypto.randomUUID();
-  const response = await googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/watch`, body: JSON.stringify({ id, type: "web_hook", address: `${calendarEnv.publicUrl()}/api/calendar-sync/google` }), eventKey: "channel" }) as { id: string; resourceId: string; expiration?: string };
-  calendarDb.setSecretJson("google:channel", { id: response.id, resourceId: response.resourceId, expiration: Number(response.expiration ?? Date.now() + 24 * 60 * 60 * 1000) });
 };
