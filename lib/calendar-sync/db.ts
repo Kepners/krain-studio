@@ -34,6 +34,13 @@ const db = () => {
       received_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY(provider, notification_id)
     );
+    CREATE TABLE IF NOT EXISTS write_audit (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      provider TEXT NOT NULL,
+      event_id TEXT NOT NULL,
+      written_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE INDEX IF NOT EXISTS write_audit_recent ON write_audit(provider, event_id, written_at);
   `);
   return database;
 };
@@ -74,6 +81,18 @@ export const markDeleted = (link: EventLink) => saveLink({ ...link, deletedAt: n
 export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
 export const clearEventLinks = () => db().prepare("DELETE FROM event_links").run();
 
+export const recordWrite = (provider: Provider, eventId: string) => db().prepare("INSERT INTO write_audit(provider, event_id) VALUES (?, ?)").run(provider, eventId);
+
+export const countRecentWrites = (provider: Provider, eventId: string | undefined, minutes: number) => {
+  const since = `-${Math.max(0, Math.trunc(minutes))} minutes`;
+  const row = eventId === undefined
+    ? db().prepare("SELECT COUNT(*) AS total FROM write_audit WHERE provider = ? AND written_at >= datetime('now', ?)").get(provider, since) as { total: number }
+    : db().prepare("SELECT COUNT(*) AS total FROM write_audit WHERE provider = ? AND event_id = ? AND written_at >= datetime('now', ?)").get(provider, eventId, since) as { total: number };
+  return row.total;
+};
+
+export const listRecentWrites = (provider: Provider, minutes: number) => db().prepare("SELECT provider, event_id AS eventId, written_at AS writtenAt FROM write_audit WHERE provider = ? AND written_at >= datetime('now', ?) ORDER BY written_at DESC").all(provider, `-${Math.max(0, Math.trunc(minutes))} minutes`) as { provider: Provider; eventId: string; writtenAt: string }[];
+
 export const acceptNotification = (provider: Provider, notificationId: string) => {
   try {
     db().prepare("INSERT INTO received_notifications(provider, notification_id) VALUES (?, ?)").run(provider, notificationId);
@@ -83,4 +102,4 @@ export const acceptNotification = (provider: Provider, notificationId: string) =
   }
 };
 
-export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification };
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, getLinkByGoogle, saveLink, markDeleted, listActiveLinks, clearEventLinks, acceptNotification, recordWrite, countRecentWrites, listRecentWrites };

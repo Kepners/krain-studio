@@ -1,6 +1,6 @@
 import { calendarDb } from "./db";
-import { eventHash, createGoogleEvent, createGraphEvent, deleteGoogleCalendar, deleteGoogleEvent, deleteGraphEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGoogleCalendarId, getGoogleEvent, getGraphEvent, listGoogleChanges, listGraphEvents, renewGoogleChannel, renewGraphSubscription, updateGoogleEvent, updateGraphEvent } from "./providers";
-import type { EventLink, NormalizedEvent } from "./types";
+import { eventHash, createGoogleEvent, createGraphEvent, deleteGoogleCalendar, deleteGoogleEvent, deleteGraphEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGoogleCalendarId, getGoogleEvent, getGraphEvent, graphAttendeeCount, listGoogleChanges, listGraphEvents, renewGoogleChannel, renewGraphSubscription, updateGoogleEvent, updateGraphEvent } from "./providers";
+import type { EventLink } from "./types";
 
 let syncTail: Promise<void> = Promise.resolve();
 
@@ -11,7 +11,35 @@ const runExclusively = (work: () => Promise<void>) => {
 };
 
 const isNotFound = (error: unknown) => error instanceof Error && /\b404\b/.test(error.message);
-const linked = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null });
+
+/**
+ * Each side of a link stores the hash of what THAT side actually holds.
+ *
+ * Storing the near side's hash for the far side (the old behaviour) meant the far side could never
+ * match, so every pass saw a difference and wrote again: a guaranteed ping-pong, and on the Outlook
+ * side every write emailed the attendees. So a hash is only ever taken from the API response for
+ * the side that was just written, and a response we cannot read is a hard stop rather than a guess.
+ */
+const usableEvent = (response: unknown, provider: string): Record<string, unknown> => {
+  const record = response as Record<string, unknown> | null | undefined;
+  if (!record || typeof record !== "object" || typeof record.id !== "string" || !record.id || !record.start || !record.end)
+    throw new Error(`${provider} did not return a usable event after the write, so the sync stopped rather than store a guessed hash.`);
+  return record;
+};
+
+const googleSideHash = (response: unknown) => eventHash(fromGoogle(usableEvent(response, "Google Calendar")));
+const graphSideHash = (response: unknown) => eventHash(fromGraph(usableEvent(response, "Microsoft Graph")));
+
+const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null });
+
+/** How many attendees the Outlook event currently has, or "missing" if it is gone. */
+const outlookAttendees = async (outlookEventId: string): Promise<number | "missing"> => {
+  try { return graphAttendeeCount(await getGraphEvent(outlookEventId) as Record<string, unknown>); }
+  catch (error) {
+    if (isNotFound(error)) return "missing";
+    throw error;
+  }
+};
 
 const mirrorOutlookEvent = async (outlookId: string) => {
   const link = calendarDb.getLinkByOutlook(outlookId);
@@ -28,16 +56,16 @@ const mirrorOutlookEvent = async (outlookId: string) => {
   }
   if (source.isCancelled) return;
   const event = fromGraph(source);
-  const sourceHash = eventHash(event);
+  const outlookHash = eventHash(event);
   if (link?.deletedAt) return;
-  if (link && sourceHash === link.outlookHash) return;
+  if (link && outlookHash === link.outlookHash) return;
   if (link) {
-    await updateGoogleEvent(link.googleEventId, event, outlookId);
-    calendarDb.saveLink(linked(outlookId, link.googleEventId, sourceHash, sourceHash));
+    const updated = await updateGoogleEvent(link.googleEventId, event, outlookId);
+    calendarDb.saveLink(linkRecord(outlookId, link.googleEventId, outlookHash, googleSideHash(updated)));
     return;
   }
-  const created = await createGoogleEvent(event, outlookId) as Record<string, unknown>;
-  calendarDb.saveLink(linked(outlookId, String(created.id), sourceHash, sourceHash));
+  const created = usableEvent(await createGoogleEvent(event, outlookId), "Google Calendar");
+  calendarDb.saveLink(linkRecord(outlookId, String(created.id), outlookHash, eventHash(fromGoogle(created))));
 };
 
 const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unknown>) => {
@@ -51,7 +79,11 @@ const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unkno
   if (googleEvent.status === "cancelled") {
     if (link?.deletedAt) return;
     if (link) {
-      try { await deleteGraphEvent(link.outlookEventId); } catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
+      const attendees = await outlookAttendees(link.outlookEventId);
+      if (attendees === "missing") { calendarDb.markDeleted(link); return; }
+      // Cancelling an Outlook event emails everyone on it. Leave it standing and leave the link alone.
+      if (attendees > 0) return;
+      try { await deleteGraphEvent(link.outlookEventId, attendees); } catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
       calendarDb.markDeleted(link);
     }
     return;
@@ -59,16 +91,20 @@ const mirrorGoogleEvent = async (googleId: string, source?: Record<string, unkno
   const properties = (googleEvent.extendedProperties as { private?: Record<string, unknown> } | undefined)?.private;
   if (!link && !properties?.krainSyncOutlookEventId) return;
   const event = fromGoogle(googleEvent);
-  const sourceHash = eventHash(event);
+  const googleHash = eventHash(event);
   if (link?.deletedAt) return;
-  if (link && sourceHash === link.googleHash) return;
+  if (link && googleHash === link.googleHash) return;
+  // Outlook is read-only for anything with other people on it: Microsoft emails every attendee on every write.
+  if (event.attendees.length) return;
   if (link) {
-    await updateGraphEvent(link.outlookEventId, event, googleId);
-    calendarDb.saveLink(linked(link.outlookEventId, googleId, sourceHash, sourceHash));
+    const attendees = await outlookAttendees(link.outlookEventId);
+    if (attendees === "missing" || attendees > 0) return;
+    const updated = await updateGraphEvent(link.outlookEventId, event, googleId, attendees);
+    calendarDb.saveLink(linkRecord(link.outlookEventId, googleId, graphSideHash(updated), googleHash));
     return;
   }
-  const created = await createGraphEvent(event, googleId) as Record<string, unknown>;
-  calendarDb.saveLink(linked(String(created.id), googleId, sourceHash, sourceHash));
+  const created = usableEvent(await createGraphEvent(event, googleId), "Microsoft Graph");
+  calendarDb.saveLink(linkRecord(String(created.id), googleId, eventHash(fromGraph(created)), googleHash));
 };
 
 const syncGoogleChangesUnsafe = async () => {
