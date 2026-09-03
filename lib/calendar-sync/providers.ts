@@ -267,9 +267,12 @@ export const ensureGoogleCalendar = async () => {
 };
 
 export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`);
-export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: `outlook:${outlookId}` });
-export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: eventId });
-export const deleteGoogleEvent = (eventId: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, eventKey: eventId });
+/** One meeting, one name, for its whole life: created, changed and removed all count together. */
+const budgetKey = (outlookId: string) => outlookId ? `outlook:${outlookId}` : "";
+
+export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });
+export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });
+export const deleteGoogleEvent = (eventId: string, outlookId: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, eventKey: budgetKey(outlookId) });
 
 export const listGraphEvents = async () => {
   const results: Record<string, unknown>[] = [];

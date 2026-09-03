@@ -19,6 +19,10 @@ export const WRITE_WINDOW_MINUTES = 60;
  * The per-event ceiling is the ping-pong catcher: one meeting written over and over is the failure
  * that caused the incident, and 3 in an hour is already abnormal.
  *
+ * It is counted against the OUTLOOK event id, the one name a meeting has from its very first copy
+ * onward. Booking the first copy against one key and every later copy against another let a
+ * churning meeting have 1 + 3 = 4 an hour, so the stated number was not the real number.
+ *
  * The hourly total is deliberately generous by comparison. Nobody is emailed by a Google write, and
  * a first migration of a normal diary would trip a tight ceiling immediately and tempt someone into
  * switching the whole guard off. A guard people want to disable protects nothing.
@@ -41,7 +45,8 @@ export type MailGuardReason =
   | "event-write-budget-exhausted"
   | "provider-write-budget-exhausted"
   | "write-through-read-helper"
-  | "forged-permit";
+  | "forged-permit"
+  | "unknown-event-key";
 
 export class CalendarMailGuardError extends Error {
   readonly reason: MailGuardReason;
@@ -137,6 +142,9 @@ export const guardGoogleWrite = ({ method, path, eventKey }: GoogleWriteRequest)
   const verb = method.toUpperCase();
   if (verb === "GET" || verb === "HEAD") refuse("write-through-read-helper", `guardGoogleWrite was handed a ${verb} for ${path}. Reads must not go through the write guard.`);
   assertNotPaused();
+  // A blank key would put every meeting in one bucket, or hand each write a fresh allowance.
+  // Either way the ceiling stops meaning what it says, so it is refused rather than guessed.
+  if (!eventKey.trim()) refuse("unknown-event-key", `A ${verb} to ${path} was refused: the caller did not say which meeting it belongs to.`);
   spendWriteBudget("google", eventKey, GOOGLE_WRITES_PER_HOUR);
   return mintPermit("google");
 };

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSetupSession } from "@/lib/calendar-sync/auth";
-import { calendarDb } from "@/lib/calendar-sync/db";
 import { allowWritesByHand, pauseSync } from "@/lib/calendar-sync/mail-guard";
 
 export const runtime = "nodejs";
@@ -17,8 +16,11 @@ export async function POST(request: NextRequest) {
   }
   const name = body.name?.trim() ?? "";
   if (!name) return NextResponse.json({ error: "Type your name before switching the copying on." }, { status: 400 });
+  // Switching copying back on LEAVES stopped meetings stopped, on purpose.
+  //
+  // Releasing them here meant the churning meeting was retried on the very next pass, which
+  // starved everything after it in the diary. A stopped meeting is released one at a time, by the
+  // person who has actually looked at it, from /api/calendar-sync/release.
   allowWritesByHand(name);
-  // Switching it back on is a person saying they have dealt with it, so stopped meetings start again.
-  const restarted = calendarDb.clearBlockedLinks();
-  return NextResponse.json({ ok: true, restarted });
+  return NextResponse.json({ ok: true });
 }

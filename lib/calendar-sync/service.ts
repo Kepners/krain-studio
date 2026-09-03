@@ -37,9 +37,7 @@ const usableEvent = (response: unknown, provider: string): Record<string, unknow
   return record;
 };
 
-const googleSideHash = (response: unknown) => eventHash(fromGoogle(usableEvent(response, "Google Calendar")));
-
-const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null, blockedReason: null, blockedAt: null });
+const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, deletedAt: null, blockedReason: null, blockedAt: null });
 
 /**
  * Names the meeting that stopped the sync.
@@ -68,7 +66,7 @@ const mirrorOutlookEvent = async (outlookId: string) => {
     if (!isNotFound(error)) throw error;
     if (link?.deletedAt) return;
     if (link) {
-      try { await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId)); }
+      try { await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId, link.outlookEventId)); }
       catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
       calendarDb.markDeleted(link);
     }
@@ -80,30 +78,62 @@ const mirrorOutlookEvent = async (outlookId: string) => {
   if (link?.deletedAt) return;
   if (link && outlookHash === link.outlookHash) return;
   if (link) {
-    const updated = await namingTheMeeting(link, `"${event.title}"`, () => updateGoogleEvent(link.googleEventId, event, outlookId));
-    calendarDb.saveLink(linkRecord(outlookId, link.googleEventId, outlookHash, googleSideHash(updated)));
+    await namingTheMeeting(link, `"${event.title}"`, () => updateGoogleEvent(link.googleEventId, event, outlookId));
+    calendarDb.saveLink(linkRecord(outlookId, link.googleEventId, outlookHash));
     return;
   }
   const created = usableEvent(await createGoogleEvent(event, outlookId), "Google Calendar");
-  calendarDb.saveLink(linkRecord(outlookId, String(created.id), outlookHash, eventHash(fromGoogle(created))));
+  calendarDb.saveLink(linkRecord(outlookId, String(created.id), outlookHash));
 };
 
-/** Reads the whole Outlook diary and brings Google into line with it. This is how changes are noticed. */
+/**
+ * The ONE reason a pass stops early. Everything else is a problem with a single meeting.
+ *
+ * This distinction is the whole point: when copying is switched off, nothing further can be
+ * written, so carrying on is pointless. Any other failure belongs to one meeting and must not be
+ * allowed to decide the fate of the rest of the diary.
+ */
+const copyingIsOff = () => Boolean(syncPause());
+
+const describe = (error: unknown) => error instanceof Error ? error.message : String(error);
+
+/**
+ * Reads the whole Outlook diary and brings Google into line with it. This is how changes are noticed.
+ *
+ * One bad meeting NEVER stops the pass. A refusal used to be thrown straight out of this loop, so
+ * a single churning meeting aborted the whole run and every meeting after it in the diary was
+ * never reached: the sync starved while looking like it was merely switched off. Each meeting is
+ * now handled on its own, and the pass reports at the end what it could not do.
+ */
 const reconcileMicrosoftUnsafe = async () => {
   const events = await listGraphEvents();
-  const seen = new Set<string>();
+  // Taken from the whole diary BEFORE any copying, so a meeting that was skipped or failed is
+  // never mistaken for a meeting that has been removed from Outlook.
+  const stillInOutlook = new Set(events.map(event => String(event.id)));
+  const switchedOffAtTheStart = copyingIsOff();
+  const troubles: string[] = [];
+
   for (const event of events) {
+    if (copyingIsOff()) break;
     const id = String(event.id);
-    seen.add(id);
-    await mirrorOutlookEvent(id);
+    try { await mirrorOutlookEvent(id); }
+    catch (error) { troubles.push(`${id}: ${describe(error)}`); }
   }
+
   for (const link of calendarDb.listActiveLinks()) {
-    if (seen.has(link.outlookEventId)) continue;
-    if (link.blockedReason) continue;
-    try { await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId)); }
-    catch (error) { if (!isNotFound(error)) throw error; }
-    calendarDb.markDeleted(link);
+    if (stillInOutlook.has(link.outlookEventId) || link.blockedReason) continue;
+    if (copyingIsOff()) break;
+    try {
+      await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId, link.outlookEventId));
+      calendarDb.markDeleted(link);
+    } catch (error) {
+      if (isNotFound(error)) calendarDb.markDeleted(link);
+      else troubles.push(`${link.outlookEventId}: ${describe(error)}`);
+    }
   }
+
+  if (!switchedOffAtTheStart && copyingIsOff()) troubles.push("copying switched itself off part-way through this pass, so the rest of the diary was not reached");
+  if (troubles.length) throw new Error(`Some meetings could not be copied. ${troubles.join(" | ")}`);
 };
 
 export const reconcileMicrosoft = async () => runExclusively(reconcileMicrosoftUnsafe);

@@ -54,6 +54,15 @@ export default function CalendarSyncPage() {
     setName(""); await load();
   };
 
+  const startOneAgain = async (outlookEventId: string) => {
+    setBusy(true); setMessage("");
+    const response = await fetch("/api/calendar-sync/release", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ outlookEventId }) });
+    const result = await response.json().catch(() => null) as { error?: string } | null;
+    setBusy(false);
+    if (!response.ok) { setMessage(result?.error ?? "That did not work."); return; }
+    await load();
+  };
+
   const copyingIsOn = status ? status.writesPaused === null : false;
 
   return <main style={{ maxWidth: 640, margin: "8rem auto", padding: "0 1.5rem", fontFamily: "sans-serif", lineHeight: 1.7 }}>
@@ -97,7 +106,7 @@ export default function CalendarSyncPage() {
             <li>never change anything in Outlook</li>
             <li>never send an email to anyone</li>
           </ul>
-          <p>It will also start any meeting it had stopped.</p>
+          <p>Any meeting it stopped stays stopped until you start it yourself.</p>
 
           <p>Type your name, then switch it on.</p>
           <input aria-label="Your name" placeholder="Your name" value={name} onChange={event => setName(event.target.value)} />{" "}
@@ -112,8 +121,12 @@ export default function CalendarSyncPage() {
         {status && status.needsAPersonCount > 0 ? <>
           <p><strong>{status.needsAPersonCount} meeting{status.needsAPersonCount === 1 ? "" : "s"} need you to look.</strong></p>
           <p>Krain stopped copying these because they kept changing.</p>
-          <p>Switching copying on again will start them.</p>
-          <ul>{status.needsAPerson.map(item => <li key={item.outlookEventId}>{item.reason}</li>)}</ul>
+          <p>They stay stopped until you start one yourself.</p>
+          <p>Look at the meeting in Outlook first. Then start it again.</p>
+          <ul>{status.needsAPerson.map(item => <li key={item.outlookEventId} style={{ marginBottom: ".75rem" }}>
+            {item.reason}{" "}
+            <button onClick={() => void startOneAgain(item.outlookEventId)} disabled={busy}>Start this one again</button>
+          </li>)}</ul>
         </> : <p>Nothing needs your attention.</p>}
       </div>
 
