@@ -196,7 +196,19 @@ export const exchangeAuthorizationCode = async (provider: Provider, code: string
  * That is the whole safety argument since the sync went one way on 2026-09-03: Microsoft is read
  * and never written, so Microsoft is never given anything to email a client about.
  */
-const graphFetch = async (path: string) => graphResponse(await fetch(path.startsWith("http") ? path : `${graphRoot}${path}`, {
+const graphOrigin = new URL(graphRoot).origin;
+const graphPathPrefix = new URL(graphRoot).pathname.replace(/\/$/, "");
+
+/** Refuse an unexpected continuation before the Microsoft token is attached to the request. */
+const graphUrl = (path: string) => {
+  const url = new URL(path.startsWith("http") ? path : `${graphRoot}${path}`);
+  if (url.origin !== graphOrigin || !(url.pathname === graphPathPrefix || url.pathname.startsWith(`${graphPathPrefix}/`))) {
+    throw new Error(`Microsoft Graph read refused an untrusted continuation URL: ${url.origin}${url.pathname}`);
+  }
+  return url.toString();
+};
+
+const graphFetch = async (path: string) => graphResponse(await fetch(graphUrl(path), {
   headers: { authorization: `Bearer ${await accessToken("microsoft")}`, "content-type": "application/json", Prefer: 'outlook.timezone="UTC"' },
 }));
 
@@ -268,7 +280,10 @@ export const ensureGoogleCalendar = async () => {
 
 export const getGraphEvent = (eventId: string) => graph(`${graphEventsPath()}/${encodeURIComponent(eventId)}`);
 /** One meeting, one name, for its whole life: created, changed and removed all count together. */
-const budgetKey = (outlookId: string) => outlookId ? `outlook:${outlookId}` : "";
+const budgetKey = (outlookId: string) => {
+  const id = outlookId.trim();
+  return id ? `outlook:${id}` : "";
+};
 
 export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });
 export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });

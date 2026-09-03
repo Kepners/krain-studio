@@ -34,8 +34,8 @@ const DECLARED_GRAPH_WRITE_PATHS: string[] = [];
 
 /** Every place in this repo that can put a request on the network. */
 const DECLARED_EGRESS: Record<string, number> = {
-  // Same-origin browser calls to this app's own API.
-  "app/calendar-sync/page.tsx": 3,
+  // Same-origin browser calls to this app's own API: status, session, switch, release.
+  "app/calendar-sync/page.tsx": 4,
   // 2 OAuth token endpoints, the Microsoft READ transport, the Google transport.
   "lib/calendar-sync/providers.ts": 4,
 };

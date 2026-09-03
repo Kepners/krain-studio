@@ -38,7 +38,7 @@ test("a database with no setting at all copies nothing", async () => {
   try {
     await assert.rejects(attempt(() => providers.createGoogleEvent(plainEvent(), "AAMkOutlook1")), refusedBecause("sync-paused"));
     await assert.rejects(attempt(() => providers.updateGoogleEvent("google-1", plainEvent(), "AAMkOutlook1")), refusedBecause("sync-paused"));
-    await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-1")), refusedBecause("sync-paused"));
+    await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-1", "AAMkOutlook1")), refusedBecause("sync-paused"));
     assert.equal(stub.calls.length, 0, "nothing at all should have left the process while the sync is off");
 
     // Positive control: the same calls work once a person switches it on.

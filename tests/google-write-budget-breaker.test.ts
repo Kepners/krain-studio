@@ -5,7 +5,12 @@
 // one meeting being rewritten for ever, and it is still the only automatic signal
 // that something has gone wrong, so it earns its place.
 //
-// Every case asserts a positive quantity (writes that DID reach the transport)
+// The number is counted against ONE key for a meeting's whole life: the Outlook
+// id. Creating, changing and removing all draw on the same allowance. Booking the
+// first copy against a different key from the later ones is what previously let a
+// churning meeting have 4 an hour while the code said 3.
+//
+// Every case asserts a positive quantity (copies that DID reach the transport)
 // before it asserts that the next one did not.
 
 import assert from "node:assert/strict";
@@ -53,7 +58,81 @@ test("the same meeting can be copied 3 times in an hour and no more", async () =
   }
 
   assert.equal(stub.googleWrites().length, 3, "the over-budget copy must not have reached Google");
-  assert.equal(guard.WRITES_PER_EVENT_LIMIT, 3, "the per-event ceiling is meant to be tight; loosening it needs a deliberate decision");
+  assert.equal(guard.WRITES_PER_EVENT_LIMIT, 3, "the per-meeting ceiling is meant to be tight; loosening it needs a deliberate decision");
+});
+
+test("creating, changing and removing one meeting all draw on the SAME allowance", async () => {
+  // This is what makes 3 mean 3. Each of the three operations is a different Google call with a
+  // different Google id in the path, and all three must be booked against the one Outlook id.
+  const { providers, guard, db } = await load();
+  resetDatabase(db);
+  guard.allowWritesByHand("independent check author");
+
+  const stub = stubFetch(() => googleEventResponse());
+  try {
+    await providers.createGoogleEvent(plainEvent(), "AAMkOneMeeting");
+    await providers.updateGoogleEvent("google-1", plainEvent(), "AAMkOneMeeting");
+    await providers.deleteGoogleEvent("google-1", "AAMkOneMeeting");
+    assert.equal(stub.googleWrites().length, 3, "positive control: all three operations should have reached the transport");
+
+    // A fourth touch of the SAME meeting, by any route, is refused.
+    await assert.rejects(attempt(() => providers.createGoogleEvent(plainEvent(), "AAMkOneMeeting")), refusedBecause("event-write-budget-exhausted"));
+  } finally {
+    stub.restore();
+  }
+
+  assert.equal(db.countRecentWrites("google", "outlook:AAMkOneMeeting", 60), 3, "all three operations must be booked against the one Outlook id");
+  assert.equal(auditedGoogleWrites(db), 3, "and there must be no fourth entry hiding under another key");
+  assert.equal(stub.googleWrites().length, 3, "the fourth touch must not have reached Google");
+});
+
+test("a write that cannot say which meeting it belongs to is refused, not given a fresh allowance", async () => {
+  const { providers, guard, db } = await load();
+  resetDatabase(db);
+  guard.allowWritesByHand("independent check author");
+
+  const stub = stubFetch(() => googleEventResponse());
+  try {
+    // Positive control: with a real meeting name it goes through.
+    await providers.createGoogleEvent(plainEvent(), "AAMkNamed");
+    assert.equal(stub.googleWrites().length, 1, "positive control: a named write should reach the transport");
+
+    await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-1", "")), refusedBecause("unknown-event-key"));
+    await assert.rejects(attempt(() => providers.createGoogleEvent(plainEvent(), "")), refusedBecause("unknown-event-key"));
+    await assert.rejects(attempt(() => providers.updateGoogleEvent("google-1", plainEvent(), "")), refusedBecause("unknown-event-key"));
+  } finally {
+    stub.restore();
+  }
+  assert.equal(stub.googleWrites().length, 1, "no nameless write may reach Google");
+  assert.equal(auditedGoogleWrites(db), 1, "a nameless write must not spend anybody's allowance either");
+});
+
+// A GAP found here, reported and not repaired. Marked todo so it stays visible.
+//
+// budgetKey() adds the "outlook:" prefix BEFORE the guard checks the key is not blank, so the
+// guard only ever sees a non-empty string. An Outlook id made only of spaces produces the key
+// "outlook:   ", which is accepted — and every different run of whitespace is a DIFFERENT key, so
+// each one gets its own fresh allowance of 3. That is precisely the "guessed key" the refusal was
+// added to prevent.
+//
+// It is not reachable from Microsoft today: Graph ids are opaque and never blank, and the only
+// other source is the stored link, which came from Graph. So this is a hole in the guarantee
+// rather than a live fault. Trimming the id before the prefix, or checking the id rather than the
+// key, would close it.
+test("an Outlook id that is only whitespace is refused too", async () => {
+  const { providers, guard, db } = await load();
+  resetDatabase(db);
+  guard.allowWritesByHand("independent check author");
+
+  const stub = stubFetch(() => googleEventResponse());
+  try {
+    for (const blank of ["   ", "	", " "]) {
+      await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-1", blank)), refusedBecause("unknown-event-key"), `a whitespace meeting name ${JSON.stringify(blank)} must be refused`);
+    }
+  } finally {
+    stub.restore();
+  }
+  assert.equal(auditedGoogleWrites(db), 0, "a whitespace name must not spend an allowance of its own");
 });
 
 test("tripping the budget switches the WHOLE sync off, not just that one meeting", async () => {
@@ -70,12 +149,12 @@ test("tripping the budget switches the WHOLE sync off, not just that one meeting
     await assert.rejects(attempt(() => providers.updateGoogleEvent("google-1", plainEvent(), "AAMkOutlook1")), refusedBecause("event-write-budget-exhausted"));
 
     assert.equal(guard.isSyncPaused(), true, "the breaker should have switched the sync off");
-    assert.match(guard.syncPause()?.reason ?? "", /google-1/, "the pause should record which meeting tripped it");
+    assert.match(guard.syncPause()?.reason ?? "", /outlook:AAMkOutlook1/, "the pause should record which meeting tripped it");
 
     // A completely different meeting is now refused too.
     await assert.rejects(attempt(() => providers.updateGoogleEvent("google-innocent", plainEvent(), "AAMkOutlook2")), refusedBecause("sync-paused"));
-    await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-other")), refusedBecause("sync-paused"));
-    await assert.rejects(attempt(() => providers.createGoogleEvent(plainEvent(), "AAMkOutlook3")), refusedBecause("sync-paused"));
+    await assert.rejects(attempt(() => providers.deleteGoogleEvent("google-other", "AAMkOutlook3")), refusedBecause("sync-paused"));
+    await assert.rejects(attempt(() => providers.createGoogleEvent(plainEvent(), "AAMkOutlook4")), refusedBecause("sync-paused"));
   } finally {
     stub.restore();
   }
@@ -90,12 +169,12 @@ test("Google is capped at 200 copies an hour across all meetings", async () => {
 
   const stub = stubFetch(() => googleEventResponse());
   try {
-    for (let n = 0; n < guard.GOOGLE_WRITES_PER_HOUR; n += 1) await providers.deleteGoogleEvent(`google-event-${n}`);
+    for (let n = 0; n < guard.GOOGLE_WRITES_PER_HOUR; n += 1) await providers.deleteGoogleEvent(`google-event-${n}`, `AAMkEvent${n}`);
     assert.equal(stub.googleWrites().length, guard.GOOGLE_WRITES_PER_HOUR, "positive control: the whole hourly allowance should have reached the transport");
     assert.equal(guard.isSyncPaused(), false, "the sync should still be running at the ceiling");
 
     await assert.rejects(
-      attempt(() => providers.deleteGoogleEvent("google-one-too-many")),
+      attempt(() => providers.deleteGoogleEvent("google-one-too-many", "AAMkOneTooMany")),
       refusedBecause("provider-write-budget-exhausted"),
     );
   } finally {
@@ -127,17 +206,11 @@ test("the meeting that stopped the sync is named, so a person knows which one to
     stub.restore();
   }
 
-  // Positive control: it really did copy, and really did stop.
-  //
-  // FOUR copies, not three. The per-event ceiling counts by BUDGET KEY, and one meeting has two
-  // keys over its life: the first copy is booked against "outlook:<outlook id>" because no Google
-  // event exists yet, and every later copy against the Google id. So a churning meeting gets
-  // 1 + 3 copies before the breaker trips, not 3. Pinned here exactly so it cannot drift further.
-  assert.equal(stub.googleWrites().length, 4, `the churning meeting should have been copied exactly four times, got ${stub.googleWrites().length}`);
-  const link = db.getLinkByOutlook("AAMkChurning");
-  assert.ok(link, "the link should exist");
-  assert.equal(db.countRecentWrites("google", "outlook:AAMkChurning", 60), 1, "the first copy is booked against the Outlook id");
-  assert.equal(db.countRecentWrites("google", link.googleEventId, 60), 3, "every later copy is booked against the Google id");
+  // THREE copies, and three means three: one key for the meeting's whole life.
+  assert.equal(stub.googleWrites().length, 3, `the churning meeting should have been copied exactly three times, got ${stub.googleWrites().length}`);
+  assert.equal(db.countRecentWrites("google", "outlook:AAMkChurning", 60), 3, "every copy is booked against the one Outlook id");
+  assert.equal(auditedGoogleWrites(db), 3, "and nothing is booked under any other key");
+
   assert.ok(failures.length > 0, "positive control: the sync should have reported that it stopped");
   assert.equal(guard.isSyncPaused(), true, "the sync should be switched off");
 
@@ -168,13 +241,13 @@ test("a stopped meeting is skipped on later passes instead of being retried for 
     for (let pass = 0; pass < 7; pass += 1) {
       const meeting = world.outlook.get("AAMkChurning");
       if (meeting) world.outlook.set("AAMkChurning", { ...meeting, subject: `rev ${pass}` });
-      try { await service.maintainCalendarSync(); } catch { /* the breaker stopping the run is the point */ }
+      try { await service.maintainCalendarSync(); } catch { /* the breaker stopping the copy is the point */ }
     }
     assert.equal(db.listBlockedLinks().length, 1, "positive control: the meeting should be marked as stopped");
     const afterTrip = stub.googleWrites().length;
-    assert.equal(afterTrip, 4, "positive control: four copies before the stop, one per budget key");
+    assert.equal(afterTrip, 3, "positive control: three copies before the stop");
 
-    // Switch the sync back on but leave the marker alone: the meeting stays skipped.
+    // Switch copying back on. The marker stays, so the meeting stays skipped.
     guard.allowWritesByHand("Matt");
     for (let pass = 0; pass < 5; pass += 1) {
       const meeting = world.outlook.get("AAMkChurning");
@@ -185,5 +258,5 @@ test("a stopped meeting is skipped on later passes instead of being retried for 
   } finally {
     stub.restore();
   }
-  assert.equal(auditedGoogleWrites(db), 4, "the audit must agree with what actually reached Google");
+  assert.equal(auditedGoogleWrites(db), 3, "the audit must agree with what actually reached Google");
 });
