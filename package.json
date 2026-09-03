@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test --experimental-strip-types \"tests/**/*.test.ts\""
+    "test": "node --import ./tests/resolve-ts.mjs --test \"tests/**/*.test.ts\""
   },
   "dependencies": {
     "better-sqlite3": "^13.0.3",
