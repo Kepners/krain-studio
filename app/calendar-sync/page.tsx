@@ -97,6 +97,7 @@ export default function CalendarSyncPage() {
             <li>never change anything in Outlook</li>
             <li>never send an email to anyone</li>
           </ul>
+          <p>It will also start any meeting it had stopped.</p>
 
           <p>Type your name, then switch it on.</p>
           <input aria-label="Your name" placeholder="Your name" value={name} onChange={event => setName(event.target.value)} />{" "}
@@ -110,7 +111,8 @@ export default function CalendarSyncPage() {
         <h2 style={{ fontSize: 18, margin: "0 0 .5rem" }}>Needs a person</h2>
         {status && status.needsAPersonCount > 0 ? <>
           <p><strong>{status.needsAPersonCount} meeting{status.needsAPersonCount === 1 ? "" : "s"} need you to look.</strong></p>
-          <p>Krain stopped on these rather than risk emailing someone.</p>
+          <p>Krain stopped copying these because they kept changing.</p>
+          <p>Switching copying on again will start them.</p>
           <ul>{status.needsAPerson.map(item => <li key={item.outlookEventId}>{item.reason}</li>)}</ul>
         </> : <p>Nothing needs your attention.</p>}
       </div>

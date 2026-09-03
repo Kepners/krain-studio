@@ -1,6 +1,6 @@
 import { calendarDb } from "./db";
 import { eventHash, createGoogleEvent, deleteGoogleEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGraphEvent, listGraphEvents, updateGoogleEvent } from "./providers";
-import { syncPause } from "./mail-guard";
+import { CalendarMailGuardError, WRITES_PER_EVENT_LIMIT, syncPause } from "./mail-guard";
 import type { EventLink } from "./types";
 
 /**
@@ -41,6 +41,24 @@ const googleSideHash = (response: unknown) => eventHash(fromGoogle(usableEvent(r
 
 const linkRecord = (outlookEventId: string, googleEventId: string, outlookHash: string, googleHash: string): EventLink => ({ outlookEventId, googleEventId, outlookHash, googleHash, deletedAt: null, blockedReason: null, blockedAt: null });
 
+/**
+ * Names the meeting that stopped the sync.
+ *
+ * When one meeting is copied over and over, the breaker switches the whole sync off. That tells a
+ * person that something is wrong but not WHICH meeting, and not knowing which one is exactly what
+ * made the original incident so hard to see. So the offending link is marked here, with the
+ * meeting's name, and the setup page reads it back.
+ */
+const isEventBudgetTrip = (error: unknown) => error instanceof CalendarMailGuardError && error.reason === "event-write-budget-exhausted";
+
+const namingTheMeeting = async <T>(link: EventLink, meeting: string, work: () => Promise<T>): Promise<T> => {
+  try { return await work(); }
+  catch (error) {
+    if (isEventBudgetTrip(error)) calendarDb.blockLink(link, `${meeting} kept changing and was copied ${WRITES_PER_EVENT_LIMIT} times in an hour, so Krain stopped copying it`);
+    throw error;
+  }
+};
+
 const mirrorOutlookEvent = async (outlookId: string) => {
   const link = calendarDb.getLinkByOutlook(outlookId);
   if (link?.blockedReason) return;
@@ -50,7 +68,8 @@ const mirrorOutlookEvent = async (outlookId: string) => {
     if (!isNotFound(error)) throw error;
     if (link?.deletedAt) return;
     if (link) {
-      try { await deleteGoogleEvent(link.googleEventId); } catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
+      try { await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId)); }
+      catch (deleteError) { if (!isNotFound(deleteError)) throw deleteError; }
       calendarDb.markDeleted(link);
     }
     return;
@@ -61,7 +80,7 @@ const mirrorOutlookEvent = async (outlookId: string) => {
   if (link?.deletedAt) return;
   if (link && outlookHash === link.outlookHash) return;
   if (link) {
-    const updated = await updateGoogleEvent(link.googleEventId, event, outlookId);
+    const updated = await namingTheMeeting(link, `"${event.title}"`, () => updateGoogleEvent(link.googleEventId, event, outlookId));
     calendarDb.saveLink(linkRecord(outlookId, link.googleEventId, outlookHash, googleSideHash(updated)));
     return;
   }
@@ -81,7 +100,8 @@ const reconcileMicrosoftUnsafe = async () => {
   for (const link of calendarDb.listActiveLinks()) {
     if (seen.has(link.outlookEventId)) continue;
     if (link.blockedReason) continue;
-    try { await deleteGoogleEvent(link.googleEventId); } catch (error) { if (!isNotFound(error)) throw error; }
+    try { await namingTheMeeting(link, "A meeting that was removed from Outlook", () => deleteGoogleEvent(link.googleEventId)); }
+    catch (error) { if (!isNotFound(error)) throw error; }
     calendarDb.markDeleted(link);
   }
 };

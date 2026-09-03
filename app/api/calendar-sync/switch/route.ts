@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireSetupSession } from "@/lib/calendar-sync/auth";
+import { calendarDb } from "@/lib/calendar-sync/db";
 import { allowWritesByHand, pauseSync } from "@/lib/calendar-sync/mail-guard";
 
 export const runtime = "nodejs";
@@ -17,5 +18,7 @@ export async function POST(request: NextRequest) {
   const name = body.name?.trim() ?? "";
   if (!name) return NextResponse.json({ error: "Type your name before switching the copying on." }, { status: 400 });
   allowWritesByHand(name);
-  return NextResponse.json({ ok: true });
+  // Switching it back on is a person saying they have dealt with it, so stopped meetings start again.
+  const restarted = calendarDb.clearBlockedLinks();
+  return NextResponse.json({ ok: true, restarted });
 }

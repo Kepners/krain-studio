@@ -52,9 +52,30 @@ export const normalizeDescription = cleanHtml;
  * somebody edited the meeting.
  */
 const normaliseText = (value: string) => decodeFully(value).replace(/\s+/g, " ").trim();
-const isoToUtc = (value: string) => new Date(value).toISOString();
-const calendarDateTime = (value: { date?: string; dateTime?: string }): CalendarDateTime =>
-  value.date ? { kind: "date", value: value.date } : { kind: "dateTime", value: isoToUtc(value.dateTime ?? "") };
+/** True when the timestamp already says which part of the world it belongs to, e.g. "...Z" or "...+01:00". */
+const carriesAnOffset = (value: string) => /(?:Z|[+-]\d{2}:?\d{2})$/i.test(value);
+
+/**
+ * Reads a calendar timestamp as a real instant.
+ *
+ * Microsoft Graph answers this repo with UTC times, because every read asks for UTC, but it writes
+ * them WITHOUT a "Z": "2026-09-10T09:00:00.0000000" next to timeZone "UTC". Node reads a bare
+ * timestamp as LOCAL time, so through British Summer Time every Outlook meeting was read an hour
+ * early. That is not only an hour out in the diary: the Outlook side and the Google copy then
+ * disagree for ever, so every pass rewrites the same meeting and the breaker stops the whole sync
+ * after three of them.
+ *
+ * Google is left alone. It sends properly offset values, and blanket-appending "Z" would corrupt
+ * them. The two shapes are handled separately: a bare timestamp whose provider says UTC is UTC,
+ * and anything carrying its own offset is trusted as it stands.
+ */
+const isoToUtc = (value: string, timeZone?: string) => {
+  const utcWithoutTheZ = value && !carriesAnOffset(value) && (timeZone ?? "").trim().toUpperCase() === "UTC";
+  return new Date(utcWithoutTheZ ? `${value}Z` : value).toISOString();
+};
+
+const calendarDateTime = (value: { date?: string; dateTime?: string; timeZone?: string }): CalendarDateTime =>
+  value.date ? { kind: "date", value: value.date } : { kind: "dateTime", value: isoToUtc(value.dateTime ?? "", value.timeZone) };
 
 const dateForGoogle = (value: CalendarDateTime) => value.kind === "date" ? { date: value.value } : { dateTime: value.value, timeZone: "UTC" };
 
@@ -222,14 +243,14 @@ const attendeeStatus = (value: unknown): CalendarAttendee["responseStatus"] =>
 
 export const fromGoogle = (event: Record<string, unknown>): NormalizedEvent => ({
   id: String(event.id), title: String(event.summary ?? "").replace(/^KS\s*-\s*/i, ""), description: String(event.description ?? ""), location: String(event.location ?? ""),
-  start: calendarDateTime(event.start as { date?: string; dateTime?: string }), end: calendarDateTime(event.end as { date?: string; dateTime?: string }),
+  start: calendarDateTime(event.start as { date?: string; dateTime?: string; timeZone?: string }), end: calendarDateTime(event.end as { date?: string; dateTime?: string; timeZone?: string }),
   attendees: ((event.attendees as Array<Record<string, unknown>> | undefined) ?? []).filter(item => typeof item.email === "string").map(item => ({ email: String(item.email), name: typeof item.displayName === "string" ? item.displayName : undefined, responseStatus: attendeeStatus(item.responseStatus) })),
   recurrence: Array.isArray(event.recurrence) ? event.recurrence.map(String) : [],
 });
 
 export const fromGraph = (event: Record<string, unknown>): NormalizedEvent => ({
   id: String(event.id), title: String(event.subject ?? ""), description: cleanHtml((event.body as { content?: string } | undefined)?.content), location: String((event.location as { displayName?: string } | undefined)?.displayName ?? ""),
-  start: calendarDateTime(event.start as { dateTime?: string }), end: calendarDateTime(event.end as { dateTime?: string }),
+  start: calendarDateTime(event.start as { dateTime?: string; timeZone?: string }), end: calendarDateTime(event.end as { dateTime?: string; timeZone?: string }),
   attendees: ((event.attendees as Array<Record<string, unknown>> | undefined) ?? []).map(item => ({ email: String((item.emailAddress as { address?: string } | undefined)?.address ?? ""), name: (item.emailAddress as { name?: string } | undefined)?.name, responseStatus: attendeeStatus((item.status as { response?: unknown } | undefined)?.response) })).filter(item => item.email),
   recurrence: graphRecurrenceToGoogle(event.recurrence as { pattern?: Record<string, unknown>; range?: Record<string, unknown> } | undefined),
 });

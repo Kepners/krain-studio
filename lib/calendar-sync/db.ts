@@ -90,6 +90,9 @@ export const markDeleted = (link: EventLink) => saveLink({ ...link, deletedAt: n
 /** Parks a link that cannot be finished without emailing someone, so later passes skip it instead of re-reading it forever. */
 export const blockLink = (link: EventLink, reason: string) => saveLink({ ...link, blockedReason: reason, blockedAt: new Date().toISOString() });
 
+/** Restarts every stopped meeting. A person doing this is saying they have dealt with it. Returns how many. */
+export const clearBlockedLinks = () => db().prepare("UPDATE event_links SET blocked_reason = NULL, blocked_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE blocked_reason IS NOT NULL").run().changes;
+
 export const listBlockedLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE blocked_reason IS NOT NULL AND deleted_at IS NULL`).all() as EventLink[];
 export const listActiveLinks = () => db().prepare(`SELECT ${eventLinkFields} FROM event_links WHERE deleted_at IS NULL`).all() as EventLink[];
 
@@ -105,4 +108,4 @@ export const countRecentWrites = (provider: Provider, eventId: string | undefine
 
 
 
-export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, saveLink, markDeleted, listActiveLinks, recordWrite, countRecentWrites, blockLink, listBlockedLinks };
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, saveLink, markDeleted, listActiveLinks, recordWrite, countRecentWrites, blockLink, listBlockedLinks, clearBlockedLinks };
