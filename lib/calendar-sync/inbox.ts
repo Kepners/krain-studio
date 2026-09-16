@@ -75,18 +75,30 @@ export const inboxMessagesAfterCursor = (mailbox: Mailbox, cursor: number, messa
   return ordered.filter(message => message.uid > cursor);
 };
 
+export const inboxReadPlan = (cursor: number, uidNext: number, importHistorical: boolean) => {
+  const highestUid = Math.max(0, uidNext - 1);
+  if (!cursor && !importHistorical) return { highestUid, range: null };
+  if (cursor >= highestUid) return { highestUid: cursor, range: null };
+  return { highestUid, range: `${Math.max(1, cursor + 1)}:${highestUid}` };
+};
+
 const readInbox = async (config: { mailbox: Mailbox; host: string; user: string; pass: string; port: number }) => {
   const client = new ImapFlow({ host: config.host, port: config.port, secure: true, auth: { user: config.user, pass: config.pass }, logger: false });
   await client.connect();
   const lock = await client.getMailboxLock("INBOX");
   try {
     const cursor = calendarDb.inboxCursor(config.mailbox);
+    const mailbox = client.mailbox;
+    if (!mailbox) throw new Error(`IMAP did not open ${config.mailbox} INBOX`);
+    const plan = inboxReadPlan(cursor, Number(mailbox.uidNext), calendarEnv.inboxImportHistorical());
     const all: InboxMessage[] = [];
-    for await (const item of client.fetch(`${Math.max(1, cursor + 1)}:*`, { uid: true, source: true }, { uid: true })) {
-      if (!item.source) continue;
-      all.push({ mailbox: config.mailbox, uid: item.uid, source: Buffer.from(item.source) });
+    if (plan.range) {
+      for await (const item of client.fetch(plan.range, { uid: true, source: true }, { uid: true })) {
+        if (!item.source) continue;
+        all.push({ mailbox: config.mailbox, uid: item.uid, source: Buffer.from(item.source) });
+      }
     }
-    return { mailbox: config.mailbox, messages: inboxMessagesAfterCursor(config.mailbox, cursor, all, calendarEnv.inboxImportHistorical()), highestUid: all.length ? Math.max(...all.map(item => item.uid)) : cursor, baseline: !cursor && !calendarEnv.inboxImportHistorical() };
+    return { mailbox: config.mailbox, messages: inboxMessagesAfterCursor(config.mailbox, cursor, all, calendarEnv.inboxImportHistorical()), highestUid: plan.highestUid };
   } finally { lock.release(); await client.logout(); }
 };
 

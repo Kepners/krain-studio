@@ -91,6 +91,10 @@ test("the first read establishes a historical baseline, while a later cursor onl
   assert.deepEqual(inbox.inboxMessagesAfterCursor("krain", 0, first, false), []);
   assert.deepEqual(inbox.inboxMessagesAfterCursor("krain", 0, first, true).map(item => item.uid), [5, 8]);
   assert.deepEqual(inbox.inboxMessagesAfterCursor("krain", 5, first, false).map(item => item.uid), [8]);
+  assert.deepEqual(inbox.inboxReadPlan(0, 41, false), { highestUid: 40, range: null });
+  assert.deepEqual(inbox.inboxReadPlan(40, 41, false), { highestUid: 40, range: null });
+  assert.deepEqual(inbox.inboxReadPlan(40, 44, false), { highestUid: 43, range: "41:43" });
+  assert.deepEqual(inbox.inboxReadPlan(0, 4, true), { highestUid: 3, range: "1:3" });
 });
 
 test("scheduled maintenance only reads configured inboxes and never calls Microsoft Graph", async () => {
