@@ -2,6 +2,7 @@ import { calendarDb } from "./db";
 import { eventHash, createGoogleEvent, deleteGoogleEvent, ensureGoogleCalendar, fromGoogle, fromGraph, getGraphEvent, listGraphEvents, updateGoogleEvent } from "./providers";
 import { CalendarMailGuardError, WRITES_PER_EVENT_LIMIT, syncPause } from "./mail-guard";
 import type { EventLink } from "./types";
+import { maintainInboxInvitations } from "./inbox";
 
 /**
  * ONE WAY: Outlook is read, Google is written.
@@ -148,6 +149,12 @@ export const migrateOutlookOnce = async () => runExclusively(async () => {
 export const maintainCalendarSync = async () => runExclusively(async () => {
   await ensureGoogleCalendar();
   await reconcileMicrosoftUnsafe();
+});
+
+/** The live scheduler uses only the 2 work inboxes. The Outlook migration remains explicit compatibility work. */
+export const maintainInboxCalendarSync = async () => runExclusively(async () => {
+  await ensureGoogleCalendar();
+  await maintainInboxInvitations();
 });
 
 export const finishConnection = async () => {

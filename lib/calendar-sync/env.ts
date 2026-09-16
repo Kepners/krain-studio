@@ -18,4 +18,16 @@ export const calendarEnv = {
   microsoftCalendarId: () => process.env.KRAIN_MICROSOFT_CALENDAR_ID || "primary",
   googleClientId: () => value("KRAIN_GOOGLE_CLIENT_ID"),
   googleClientSecret: () => value("KRAIN_GOOGLE_CLIENT_SECRET"),
+  inboxDryRun: () => process.env.KRAIN_INBOX_DRY_RUN === "true",
+  inboxImportHistorical: () => process.env.KRAIN_INBOX_IMPORT_HISTORICAL === "true",
+  inboxes: () => (["krain", "buildsales"] as const).map(mailbox => {
+    const prefix = `KRAIN_INBOX_${mailbox.toUpperCase()}_`;
+    const host = process.env[`${prefix}HOST`];
+    const user = process.env[`${prefix}USER`];
+    const pass = process.env[`${prefix}PASSWORD`];
+    if (!host || !user || !pass) throw new Error(`Missing required IMAP settings for ${mailbox}: HOST, USER and PASSWORD are all required.`);
+    const port = Number(process.env[`${prefix}PORT`] || 993);
+    if (!Number.isInteger(port) || port < 1 || port > 65535) throw new Error(`Invalid IMAP port for ${mailbox}.`);
+    return { mailbox, host, user, pass, port };
+  }),
 };

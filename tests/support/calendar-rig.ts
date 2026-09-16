@@ -84,7 +84,7 @@ type Db = typeof import("../../lib/calendar-sync/db").calendarDb;
 
 /** Wipes every table and re-seeds the two OAuth tokens, so each check starts from a known state. */
 export const resetDatabase = (calendarDb: Db) => {
-  calendarDb.db().exec("DELETE FROM write_audit; DELETE FROM settings; DELETE FROM event_links;");
+  calendarDb.db().exec("DELETE FROM write_audit; DELETE FROM settings; DELETE FROM event_links; DELETE FROM inbox_links; DELETE FROM inbox_messages; DELETE FROM inbox_holds;");
   const token = { accessToken: "test-access-token", refreshToken: "test-refresh-token", expiresAt: Date.now() + 3_600_000 };
   calendarDb.setToken("microsoft", token);
   calendarDb.setToken("google", token);

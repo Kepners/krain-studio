@@ -52,6 +52,26 @@ const db = () => {
       written_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
     CREATE INDEX IF NOT EXISTS write_audit_recent ON write_audit(provider, event_id, written_at);
+    CREATE TABLE IF NOT EXISTS inbox_links (
+      invite_key TEXT PRIMARY KEY,
+      google_event_id TEXT NOT NULL UNIQUE,
+      event_hash TEXT NOT NULL,
+      cancelled_at TEXT,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS inbox_messages (
+      mailbox TEXT NOT NULL,
+      imap_uid INTEGER NOT NULL,
+      processed_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(mailbox, imap_uid)
+    );
+    CREATE TABLE IF NOT EXISTS inbox_holds (
+      mailbox TEXT NOT NULL,
+      imap_uid INTEGER NOT NULL,
+      reason TEXT NOT NULL,
+      held_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY(mailbox, imap_uid)
+    );
   `);
   addColumn(database, "event_links", "blocked_reason", "blocked_reason TEXT");
   addColumn(database, "event_links", "blocked_at", "blocked_at TEXT");
@@ -119,6 +139,16 @@ export const countRecentWrites = (provider: Provider, eventId: string | undefine
   return row.total;
 };
 
+const inboxLinkFields = "invite_key AS inviteKey, google_event_id AS googleEventId, event_hash AS eventHash, cancelled_at AS cancelledAt";
+export const getInboxLink = (inviteKey: string) => db().prepare(`SELECT ${inboxLinkFields} FROM inbox_links WHERE invite_key = ?`).get(inviteKey) as import("./types").InboxLink | undefined;
+export const saveInboxLink = (link: import("./types").InboxLink) => db().prepare(`INSERT INTO inbox_links(invite_key, google_event_id, event_hash, cancelled_at, updated_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)
+  ON CONFLICT(invite_key) DO UPDATE SET google_event_id = excluded.google_event_id, event_hash = excluded.event_hash, cancelled_at = excluded.cancelled_at, updated_at = CURRENT_TIMESTAMP`).run(link.inviteKey, link.googleEventId, link.eventHash, link.cancelledAt);
+export const processedInboxMessage = (mailbox: string, uid: number) => Boolean(db().prepare("SELECT 1 FROM inbox_messages WHERE mailbox = ? AND imap_uid = ?").get(mailbox, uid));
+export const markInboxMessageProcessed = (mailbox: string, uid: number) => db().prepare("INSERT OR IGNORE INTO inbox_messages(mailbox, imap_uid) VALUES (?, ?)").run(mailbox, uid);
+export const holdInboxMessage = (mailbox: string, uid: number, reason: string) => db().prepare("INSERT OR IGNORE INTO inbox_holds(mailbox, imap_uid, reason) VALUES (?, ?, ?)").run(mailbox, uid, reason);
+export const inboxCursor = (mailbox: string) => Number(getSetting(`inbox:${mailbox}:uid`)?.value ?? 0);
+export const setInboxCursor = (mailbox: string, uid: number) => setSetting(`inbox:${mailbox}:uid`, String(uid));
 
 
-export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, saveLink, markDeleted, listActiveLinks, recordWrite, countRecentWrites, blockLink, listBlockedLinks, releaseLink };
+
+export const calendarDb = { db, getSetting, setSetting, deleteSetting, getSecretJson, setSecretJson, getToken, setToken, getLinkByOutlook, saveLink, markDeleted, listActiveLinks, recordWrite, countRecentWrites, blockLink, listBlockedLinks, releaseLink, getInboxLink, saveInboxLink, processedInboxMessage, markInboxMessageProcessed, holdInboxMessage, inboxCursor, setInboxCursor };

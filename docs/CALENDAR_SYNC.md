@@ -1,46 +1,43 @@
-# Krain calendar sync
+# Gmail-master calendar sync
 
 ## What it does
 
-Krain uses its own Microsoft 365 calendar and a separate Google calendar named **Krain Studio**.
+`kepners@gmail.com` is the single master calendar.
 
-It never reads, writes, or imports BuildSales calendar data.
+The server reads `text/calendar` invitations from `matt@krain.studio` and
+`matt@buildsales.homes` over read-only IMAP access. It creates a plain event in Gmail.
 
-The service stores the Outlook event ID and Google event ID together.
+Krain meetings use the `KS -` prefix. BuildSales meetings use `BSH -`.
 
-An Outlook edit updates that Google event.
-
-A Google edit updates that Outlook event.
-
-The stored content fingerprint prevents the return notification from creating a loop.
-
-## First connection
-
-1. Create a Microsoft Entra app for Krain.
-2. Add `https://www.krain.studio/api/calendar-sync/callback/microsoft` as its web redirect URL.
-3. Give it delegated `Calendars.ReadWrite` permission.
-4. For `kepners@outlook.com`, set the Microsoft tenant value to `consumers`.
-5. Create a Google OAuth web client.
-6. Add `https://www.krain.studio/api/calendar-sync/callback/google` as its authorised redirect URL.
-7. Enable Google Calendar API and use the `calendar` scope.
-8. Put the IDs and secrets in the private Contabo environment file.
-9. Open `https://www.krain.studio/calendar-sync` and connect Microsoft first, then Google.
-
-When both accounts connect, Krain creates a separate Google calendar named **Krain Studio**.
-
-It copies existing Outlook events once, then starts two-way sync.
+The 2 work addresses are IMAP mailboxes. They do not have independent Microsoft calendar folders.
+Adding Gmail to Outlook shows the same master calendar there without copying it again.
 
 ## Safety rules
 
-- The Microsoft subscription renews before its 7-day expiry.
-- The Google watch channel renews before it expires.
-- A 5-minute private schedule reconciles both calendars after missed webhooks.
-- Deleted events are deleted on the linked calendar only.
-- Tokens are encrypted in Krain's private data volume.
-- The connection page needs the setup password from the private environment file.
+- Scheduled maintenance never writes to Outlook or Microsoft Graph.
+- Google event bodies contain no attendee list or guest email addresses.
+- Every Google write uses `sendUpdates=none`.
+- Each Mailcow app password permits IMAP only, never SMTP.
+- A stable invitation key prevents repeated events.
+- Google failures remain retryable. They are not recorded as completed messages.
+- The first live pass records current mailbox positions and imports no old mail.
+- A per-meeting write limit stops a repeated update loop.
 
-## Deliberate boundary
+## Live setup
 
-This service has no BuildSales URL, secret, database connection, or calendar ID.
+1. Publish the Google OAuth consent screen to Production so its refresh token lasts.
+2. Restrict the OAuth request to the `calendar.events` scope.
+3. Create an IMAP-only Mailcow app password for each work mailbox.
+4. Store both passwords only in Contabo's private runtime environment file.
+5. Deploy the application and reconnect `kepners@gmail.com`.
+6. Run the first baseline pass with historical import disabled.
+7. Send 1 controlled test invitation and prove exactly 1 Gmail event appears.
+8. Add Gmail to Outlook so that same master calendar is visible there.
 
-BuildSales can appear in Google Calendar separately without interacting with Krain.
+## Never
+
+- Never restore Google-to-Outlook or Outlook calendar writes.
+- Never forward invitation emails between accounts.
+- Never copy attendees into the Gmail event body.
+- Never enable SMTP for the mailbox app passwords.
+- Never backfill old invitation mail without reviewing the proposed events first.

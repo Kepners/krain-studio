@@ -30,11 +30,11 @@ export default function PrivacyPage() {
           We do not sell personal information or use it for advertising.
         </section>
         <section style={sectionStyle}>
-          The optional private calendar sync connects one Outlook calendar and one Google calendar chosen by its owner.
-          It reads, creates, updates and deletes only the linked calendar events needed to keep those 2 calendars matching.
+          The private calendar sync reads invitations from 2 work inboxes and copies them into the owner&apos;s Gmail calendar.
+          It never sends email, writes to Outlook, or copies guest email addresses into Google.
         </section>
         <section style={sectionStyle}>
-          Calendar access tokens and the saved Outlook-to-Google event links are encrypted and stored on Krain Studio’s private server.
+          Calendar access tokens, invitation links, and mailbox positions are encrypted or stored on Krain Studio&apos;s private server.
           They are not stored in BuildSales, shared with third parties, or used for any purpose other than this calendar sync.
         </section>
         <section style={sectionStyle}>

@@ -36,3 +36,13 @@ export type EventLink = {
   blockedReason: string | null;
   blockedAt: string | null;
 };
+
+export type InboxMessage = { mailbox: "krain" | "buildsales"; uid: number; source: Buffer };
+
+export type InboxInvite = {
+  key: string;
+  method: "REQUEST" | "CANCEL";
+  event: NormalizedEvent;
+};
+
+export type InboxLink = { inviteKey: string; googleEventId: string; eventHash: string; cancelledAt: string | null };

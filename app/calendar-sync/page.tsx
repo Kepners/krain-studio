@@ -2,15 +2,10 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
-type Blocked = { outlookEventId: string; googleEventId: string; reason: string; since: string };
 type Status = {
-  microsoftConnected: boolean;
   googleConnected: boolean;
   googleCalendarId: string | null;
-  migratedAt: string | null;
   writesPaused: { reason: string; at: string } | null;
-  needsAPersonCount: number;
-  needsAPerson: Blocked[];
 };
 
 /** Turns the reason the sync recorded into a sentence a person can read. */
@@ -54,15 +49,6 @@ export default function CalendarSyncPage() {
     setName(""); await load();
   };
 
-  const startOneAgain = async (outlookEventId: string) => {
-    setBusy(true); setMessage("");
-    const response = await fetch("/api/calendar-sync/release", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ outlookEventId }) });
-    const result = await response.json().catch(() => null) as { error?: string } | null;
-    setBusy(false);
-    if (!response.ok) { setMessage(result?.error ?? "That did not work."); return; }
-    await load();
-  };
-
   const copyingIsOn = status ? status.writesPaused === null : false;
 
   return <main style={{ maxWidth: 640, margin: "8rem auto", padding: "0 1.5rem", fontFamily: "sans-serif", lineHeight: 1.7 }}>
@@ -70,19 +56,17 @@ export default function CalendarSyncPage() {
     <h1>Calendar sync</h1>
 
     {!signedIn ? <form onSubmit={signIn}>
-      <p>Enter the private setup password to connect Outlook and Google.</p>
+      <p>Enter the private setup password to connect your Gmail calendar.</p>
       <input aria-label="Setup password" type="password" value={password} onChange={event => setPassword(event.target.value)} required />
       <button type="submit">Open setup</button>
       {message && <p>{message}</p>}
     </form> : <section>
 
-      <p>Your Outlook diary is copied into Google Calendar.</p>
-      <p><strong>Nothing is ever written back to Outlook.</strong></p>
-      <p>Nobody is emailed. Guests are shown by name only.</p>
+      <p><strong>kepners@gmail.com is your master calendar.</strong></p>
+      <p>Invitations from both work inboxes are copied into it.</p>
+      <p>Nobody is emailed. Guest addresses are never copied.</p>
 
-      <p>Microsoft Outlook: <strong>{status?.microsoftConnected ? "connected" : "not connected"}</strong></p>
       <p>Google Calendar: <strong>{status?.googleConnected ? "connected" : "not connected"}</strong></p>
-      <button onClick={() => { window.location.href = "/api/calendar-sync/connect/microsoft"; }}>Connect Microsoft 365</button>{" "}
       <button onClick={() => { window.location.href = "/api/calendar-sync/connect/google"; }}>Connect Google Calendar</button>
 
       <div style={box}>
@@ -90,8 +74,8 @@ export default function CalendarSyncPage() {
 
         {copyingIsOn ? <>
           <p><strong>Copying is on.</strong></p>
-          <p>Krain checks your Outlook diary every few minutes.</p>
-          <p>New and changed meetings are copied into Google.</p>
+          <p>Krain checks both work inboxes every few minutes.</p>
+          <p>New, changed, and cancelled invitations update Gmail.</p>
           <button onClick={() => void setSwitch(false)} disabled={busy}>Switch copying off</button>
         </> : <>
           <p><strong>Copying is off.</strong></p>
@@ -100,10 +84,10 @@ export default function CalendarSyncPage() {
 
           <p style={{ marginTop: "1.25rem" }}><strong>If you switch it on, Krain will:</strong></p>
           <ul>
-            <li>read your Outlook diary every few minutes</li>
-            <li>copy each meeting into your Google Calendar</li>
-            <li>show guests by name, with no email addresses</li>
-            <li>never change anything in Outlook</li>
+            <li>read invitation files from both work inboxes</li>
+            <li>copy each meeting into your Gmail calendar</li>
+            <li>never copy guest email addresses</li>
+            <li>never write anything to Outlook</li>
             <li>never send an email to anyone</li>
           </ul>
           <p>Any meeting it stopped stays stopped until you start it yourself.</p>
@@ -116,21 +100,6 @@ export default function CalendarSyncPage() {
         {message && <p><strong>{message}</strong></p>}
       </div>
 
-      <div style={box}>
-        <h2 style={{ fontSize: 18, margin: "0 0 .5rem" }}>Needs a person</h2>
-        {status && status.needsAPersonCount > 0 ? <>
-          <p><strong>{status.needsAPersonCount} meeting{status.needsAPersonCount === 1 ? "" : "s"} need you to look.</strong></p>
-          <p>Krain stopped copying these because they kept changing.</p>
-          <p>They stay stopped until you start one yourself.</p>
-          <p>Look at the meeting in Outlook first. Then start it again.</p>
-          <ul>{status.needsAPerson.map(item => <li key={item.outlookEventId} style={{ marginBottom: ".75rem" }}>
-            {item.reason}{" "}
-            <button onClick={() => void startOneAgain(item.outlookEventId)} disabled={busy}>Start this one again</button>
-          </li>)}</ul>
-        </> : <p>Nothing needs your attention.</p>}
-      </div>
-
-      {status?.migratedAt && <p>Existing Outlook events were copied on {new Date(status.migratedAt).toLocaleString()}.</p>}
     </section>}
   </main>;
 }

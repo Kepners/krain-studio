@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { hasCronAccess } from "@/lib/calendar-sync/auth";
-import { maintainCalendarSync } from "@/lib/calendar-sync/service";
+import { maintainInboxCalendarSync } from "@/lib/calendar-sync/service";
 
 export const runtime = "nodejs";
 
-/** Outlook changes are found by polling here. There is no webhook, because registering one is itself a write to Microsoft. */
+/** This schedule reads only the 2 IMAP work inboxes. It never reads or writes Microsoft Graph. */
 export async function POST(request: NextRequest) {
   if (!hasCronAccess(request)) return NextResponse.json({ error: "Unauthorised" }, { status: 401 });
   try {
-    await maintainCalendarSync();
+    await maintainInboxCalendarSync();
     return NextResponse.json({ ok: true });
   } catch (cause) {
     return NextResponse.json({ error: cause instanceof Error ? cause.message : "Calendar maintenance failed" }, { status: 500 });

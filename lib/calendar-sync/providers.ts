@@ -163,7 +163,7 @@ export const authorizationUrl = (provider: Provider) => {
   calendarDb.setSecretJson(`${provider}:oauth_state`, { state, expiresAt: Date.now() + 10 * 60_000 });
   const callback = `${calendarEnv.publicUrl()}/api/calendar-sync/callback/${provider}`;
   if (provider === "google") {
-    const query = new URLSearchParams({ client_id: calendarEnv.googleClientId(), redirect_uri: callback, response_type: "code", scope: "https://www.googleapis.com/auth/calendar", access_type: "offline", prompt: "consent", state });
+    const query = new URLSearchParams({ client_id: calendarEnv.googleClientId(), redirect_uri: callback, response_type: "code", scope: "https://www.googleapis.com/auth/calendar.events", access_type: "offline", prompt: "consent", state });
     return `https://accounts.google.com/o/oauth2/v2/auth?${query}`;
   }
   const query = new URLSearchParams({ client_id: calendarEnv.microsoftClientId(), redirect_uri: callback, response_type: "code", response_mode: "query", scope: "offline_access Calendars.ReadWrite", state });
@@ -268,6 +268,7 @@ export const fromGraph = (event: Record<string, unknown>): NormalizedEvent => ({
 });
 
 const googleBody = (event: NormalizedEvent, outlookId: string) => ({ summary: `KS - ${event.title}`, description: mirroredDescription(event), location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), recurrence: event.recurrence, colorId: "6", extendedProperties: { private: { krainSyncOutlookEventId: outlookId, krainSyncVersion: "1" } } });
+const inboxGoogleBody = (event: NormalizedEvent, inviteKey: string, mailbox: "krain" | "buildsales") => ({ summary: `${mailbox === "krain" ? "KS" : "BSH"} - ${event.title}`, description: event.description, location: event.location, start: dateForGoogle(event.start), end: dateForGoogle(event.end), recurrence: event.recurrence, colorId: mailbox === "krain" ? "6" : "9", extendedProperties: { private: { krainInboxInviteKey: inviteKey, krainInboxVersion: "1" } } });
 const graphEventsPath = () => calendarEnv.microsoftCalendarId() === "primary" ? "/me/events" : `/me/calendars/${encodeURIComponent(calendarEnv.microsoftCalendarId())}/events`;
 
 export const getGoogleCalendarId = () => calendarDb.getSetting("google:calendar_id")?.value;
@@ -288,6 +289,10 @@ const budgetKey = (outlookId: string) => {
 export const createGoogleEvent = (event: NormalizedEvent, outlookId: string) => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });
 export const updateGoogleEvent = (eventId: string, event: NormalizedEvent, outlookId: string) => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(googleBody(event, outlookId)), eventKey: budgetKey(outlookId) });
 export const deleteGoogleEvent = (eventId: string, outlookId: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, eventKey: budgetKey(outlookId) });
+const inboxBudgetKey = (inviteKey: string) => `inbox:${inviteKey}`;
+export const createInboxGoogleEvent = (event: NormalizedEvent, inviteKey: string, mailbox: "krain" | "buildsales") => googleWrite({ method: "POST", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events?sendUpdates=none`, body: JSON.stringify(inboxGoogleBody(event, inviteKey, mailbox)), eventKey: inboxBudgetKey(inviteKey) });
+export const updateInboxGoogleEvent = (eventId: string, event: NormalizedEvent, inviteKey: string, mailbox: "krain" | "buildsales") => googleWrite({ method: "PUT", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, body: JSON.stringify(inboxGoogleBody(event, inviteKey, mailbox)), eventKey: inboxBudgetKey(inviteKey) });
+export const deleteInboxGoogleEvent = (eventId: string, inviteKey: string) => googleWrite({ method: "DELETE", path: `/calendars/${encodeURIComponent(getGoogleCalendarId() ?? "")}/events/${encodeURIComponent(eventId)}?sendUpdates=none`, eventKey: inboxBudgetKey(inviteKey) });
 
 export const listGraphEvents = async () => {
   const results: Record<string, unknown>[] = [];
