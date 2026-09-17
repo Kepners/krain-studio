@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import "./globals.css";
 
 const geist = Geist({
@@ -68,7 +69,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} ${geistMono.variable}`}>
-      <body>{children}</body>
+      <body>
+        {children}
+        <Script
+          src="https://analytics.buildsales.homes/script.js"
+          data-website-id="b7677546-f289-4243-b3b7-3efecfe1747b"
+          strategy="afterInteractive"
+        />
+      </body>
     </html>
   );
 }
